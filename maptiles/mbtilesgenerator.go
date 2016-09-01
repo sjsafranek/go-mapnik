@@ -152,7 +152,7 @@ func (m *TileDb) insert(i TileFetchResult) {
 		//log.Println("Reusing blob", s)
 	}
 	m.ensureLayer(l)
-	sql := "REPLACE INTO tiles VALUES(?, ?, ?, ?, ?)"
+	sql := "REPLACE INTO tiles VALUES(?, ?, ?, ?, ?, ?)"
 	if _, err = m.db.Exec(sql, m.layerIds[l], z, x, y, i.BlobPNG), s); err != nil {
 		log.Println(err)
 	}
