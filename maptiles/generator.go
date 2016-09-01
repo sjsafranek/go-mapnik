@@ -2,7 +2,7 @@ package maptiles
 
 import (
 	"fmt"
-	"github.com/fawick/go-mapnik/mapnik"
+	"github.com/sjsafranek/go-mapnik/mapnik"
 	"io/ioutil"
 	"log"
 	"os"
