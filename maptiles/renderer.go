@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/fawick/go-mapnik/mapnik"
+	"github.com/sjsafranek/go-mapnik/mapnik"
 )
 
 type TileCoord struct {
