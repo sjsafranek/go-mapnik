@@ -33,9 +33,9 @@ func NewTileDb(path string) *TileDb {
 		"PRAGMA journal_mode = OFF",
 		"CREATE TABLE IF NOT EXISTS layers(layer_name text PRIMARY KEY NOT NULL)",
 		"CREATE TABLE IF NOT EXISTS metadata (name text PRIMARY KEY NOT NULL, value text NOT NULL)",
-		"CREATE TABLE IF NOT EXISTS layered_tiles (layer_id integer, zoom_level integer, tile_column integer, tile_row integer, checksum text, PRIMARY KEY (layer_id, zoom_level, tile_column, tile_row) FOREIGN KEY(checksum) REFERENCES tile_blobs(checksum))",
+		"CREATE TABLE IF NOT EXISTS tiles (layer_id integer, zoom_level integer, tile_column integer, tile_row integer, tile_data blob, checksum text, PRIMARY KEY (layer_id, zoom_level, tile_column, tile_row) FOREIGN KEY(checksum) REFERENCES tile_blobs(checksum))",
 		"CREATE TABLE IF NOT EXISTS tile_blobs (checksum text, tile_data blob)",
-		"CREATE VIEW IF NOT EXISTS tiles AS SELECT layered_tiles.zoom_level as zoom_level, layered_tiles.tile_column as tile_column, layered_tiles.tile_row as tile_row, (SELECT tile_data FROM tile_blobs WHERE checksum=layered_tiles.checksum) as tile_data FROM layered_tiles WHERE layered_tiles.layer_id = (SELECT rowid FROM layers WHERE layer_name='default')",
+		"CREATE VIEW IF NOT EXISTS tiles AS SELECT tiles.zoom_level as zoom_level, tiles.tile_column as tile_column, tiles.tile_row as tile_row, (SELECT tile_data FROM tile_blobs WHERE checksum=tiles.checksum) as tile_data FROM tiles WHERE tiles.layer_id = (SELECT rowid FROM layers WHERE layer_name='default')",
 		"REPLACE INTO metadata VALUES('name', 'go-mapnik cache file')",
 		"REPLACE INTO metadata VALUES('type', 'overlay')",
 		"REPLACE INTO metadata VALUES('version', '0')",
@@ -152,7 +152,7 @@ func (m *TileDb) insert(i TileFetchResult) {
 		//log.Println("Reusing blob", s)
 	}
 	m.ensureLayer(l)
-	sql := "REPLACE INTO layered_tiles VALUES(?, ?, ?, ?, ?)"
+	sql := "REPLACE INTO tiles VALUES(?, ?, ?, ?, ?)"
 	if _, err = m.db.Exec(sql, m.layerIds[l], z, x, y, s); err != nil {
 		log.Println(err)
 	}
@@ -170,7 +170,7 @@ func (m *TileDb) fetch(r TileFetchRequest) {
 		FROM tile_blobs 
 		WHERE checksum=(
 			SELECT checksum 
-			FROM layered_tiles 
+			FROM tiles 
 			WHERE zoom_level=? 
 				AND tile_column=? 
 				AND tile_row=?
