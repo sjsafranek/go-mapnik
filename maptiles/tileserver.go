@@ -74,7 +74,7 @@ func (t *TileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	log.Println(r.RemoteAddr, r.URL.Path)
 
-	if r.URL.path == "/" {
+	if r.URL.Path == "/" {
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 
