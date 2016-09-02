@@ -13,14 +13,14 @@
 </body>
 <script type="text/javascript">
 
-var map = L.map('map', {
-    layers: [
-		L.tileLayer('http://localhost:8080/default/{z}/{x}/{y}.png', {
-			maxZoom: 20,
-			minZoom: 4,
-		}),
+var map = L.map('map',{
+	maxZoom:20,
+	layers: [
+		L.tileLayer('http://localhost:8080/default/{z}/{x}/{y}.png')
+		// L.tileLayer('http://localhost:8080/sample/{z}/{x}/{y}.png')
 	]
-}).setView([0, 0], 4);
+}).setView([0,0], 2)
+
 
 </script>
 </html>
