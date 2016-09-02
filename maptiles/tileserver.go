@@ -72,6 +72,8 @@ func (t *TileServer) ServeTileRequest(w http.ResponseWriter, r *http.Request, tc
 
 func (t *TileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
+	log.Println(r.RemoteAddr, r.URL.Path)
+
 	if strings.Contains(r.URL.Path, "metadata") {
 		// todo: include layer
 		metadata := t.m.MetaDataHandler()
