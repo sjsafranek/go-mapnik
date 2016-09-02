@@ -189,3 +189,25 @@ func (m *TileDb) fetch(r TileFetchRequest) {
 	}
 	r.OutChan <- result
 }
+
+
+func (m *TileDb) MetaDataHandler() map[string[string]] {
+
+	rows, _ := m.db.Query("SELECT * FROM metadata")
+
+	metadata :=  make(map[string]string)
+
+	for rows.Next() {
+
+		var name string
+		var value string
+		rows.Scan(&name, &value)
+		
+		metadata[name] = value
+	}
+
+	db.Close()
+
+	return metadata
+
+}
