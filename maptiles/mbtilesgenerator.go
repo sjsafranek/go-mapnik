@@ -37,11 +37,12 @@ func NewTileDb(path string) *TileDb {
 		"CREATE TABLE IF NOT EXISTS tile_blobs (checksum text, tile_data blob)",
 		"CREATE VIEW IF NOT EXISTS tiles AS SELECT tiles.zoom_level as zoom_level, tiles.tile_column as tile_column, tiles.tile_row as tile_row, (SELECT tile_data FROM tile_blobs WHERE checksum=tiles.checksum) as tile_data FROM tiles WHERE tiles.layer_id = (SELECT rowid FROM layers WHERE layer_name='default')",
 		"REPLACE INTO metadata VALUES('name', 'go-mapnik cache file')",
-		"REPLACE INTO metadata VALUES('type', 'overlay')",
-		"REPLACE INTO metadata VALUES('version', '0')",
+		"REPLACE INTO metadata VALUES('type', 'overlay')", //baselayer
+		"REPLACE INTO metadata VALUES('version', '1')",
 		"REPLACE INTO metadata VALUES('description', 'Compatible with MBTiles spec 1.2. However, this file may contain multiple overlay layers, but only the layer called default is exported as MBtiles')",
 		"REPLACE INTO metadata VALUES('format', 'png')",
 		"REPLACE INTO metadata VALUES('bounds', '-180.0,-85,180,85')",
+		"REPLACE INTO metadata VALUES('attribution', 'sjsafranek')",
 		"INSERT OR IGNORE INTO layers(layer_name) VALUES('default')",
 	}
 
