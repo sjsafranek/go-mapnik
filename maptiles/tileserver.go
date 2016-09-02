@@ -80,8 +80,9 @@ func (t *TileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		response_wrapper := make(map[string]interface{})
 		response_wrapper["status"] = "ok"
-		response_wrapper["data"] = make(map[string]interface{})
-		response_wrapper["data"]["message"] = "Hello!"
+		// response_wrapper["data"] = make(map[string]interface{})
+		// response_wrapper["data"]["message"] = "Hello!"
+		response_wrapper["data"] = `{"message":"Hello!"}`
 
 		js, err := json.Marshal(response_wrapper)
 		if err != nil {
