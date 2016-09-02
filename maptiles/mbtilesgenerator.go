@@ -206,8 +206,6 @@ func (m *TileDb) MetaDataHandler() map[string]string {
 		metadata[name] = value
 	}
 
-	db.Close()
-
 	return metadata
 
 }
