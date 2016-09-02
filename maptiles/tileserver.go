@@ -74,14 +74,30 @@ func (t *TileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	log.Println(r.RemoteAddr, r.URL.Path)
 
-	if strings.Contains(r.URL.Path, "metadata") {
+	if r.URL.path == "/" {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+
+		response_wrapper := make(map[string]interface{})
+		response_wrapper["status"] = "ok"
+		response_wrapper["data"] = make(map[string]interface{})
+		response_wrapper["data"]["message"] = "Hello!"
+
+		js, err := json.Marshal(response_wrapper)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write(js)
+		return;
+	} else if strings.Contains(r.URL.Path, "metadata") {
 		// todo: include layer
 		metadata := t.m.MetaDataHandler()
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 
 		response_wrapper := make(map[string]interface{})
-		response_wrapper["status"] = "success"
+		response_wrapper["status"] = "ok"
 		response_wrapper["data"] = metadata
 
 		js, err := json.Marshal(response_wrapper)
