@@ -5,6 +5,13 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+
+	"encoding/json"
+	"database/sql"
+	"fmt"
+	"os"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // TODO serve list of registered layers per HTTP (preferably leafletjs-compatible js-array)
@@ -65,10 +72,10 @@ func (t *TileServer) ServeTileRequest(w http.ResponseWriter, r *http.Request, tc
 
 func (t *TileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	if string.Contains(r.URL.Path, "metadata") {
-		t.MetaDataHandler(w, r)
-		return;
-	}
+	// if string.Contains(r.URL.Path, "metadata") {
+	// 	t.MetaDataHandler(w, r)
+	// 	return;
+	// }
 
 	path := pathRegex.FindStringSubmatch(r.URL.Path)
 
@@ -87,49 +94,49 @@ func (t *TileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 
 
-func (t *TileServer) MetaDataHandler(w http.ResponseWriter, r *http.Request) {
-	// Set headers
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+// func (t *TileServer) MetaDataHandler(w http.ResponseWriter, r *http.Request) {
+// 	// Set headers
+// 	w.Header().Set("Content-Type", "application/json")
+// 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	// Get params
-	vars := mux.Vars(r)
-	dbname := vars["db"]
+// 	// Get params
+// 	vars := mux.Vars(r)
+// 	dbname := vars["db"]
 
-	// check for file
-	if _, err := os.Stat(dbname+".mbtiles"); os.IsNotExist(err) {
-		fmt.Println("File not found [" + dbname + ".mbtiles]")
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	}
+// 	// check for file
+// 	if _, err := os.Stat(dbname+".mbtiles"); os.IsNotExist(err) {
+// 		fmt.Println("File not found [" + dbname + ".mbtiles]")
+// 		http.Error(w, err.Error(), http.StatusNotFound)
+// 		return
+// 	}
 
-	// Open database
-	db, _ := sql.Open("sqlite3", "./"+dbname+".mbtiles")
-	rows, _ := db.Query("SELECT * FROM metadata")
+// 	// Open database
+// 	db, _ := sql.Open("sqlite3", "./"+dbname+".mbtiles")
+// 	rows, _ := db.Query("SELECT * FROM metadata")
 
-	metadata :=  make(map[string]string)
+// 	metadata :=  make(map[string]string)
 
-	for rows.Next() {
+// 	for rows.Next() {
 
-		var name string
-		var value string
-		rows.Scan(&name, &value)
+// 		var name string
+// 		var value string
+// 		rows.Scan(&name, &value)
 		
-		metadata[name] = value
-	}
+// 		metadata[name] = value
+// 	}
 
-	db.Close()
+// 	db.Close()
 
-	response_wrapper := make(map[string]interface{})
-	response_wrapper["status"] = "success"
-	response_wrapper["data"] = metadata
+// 	response_wrapper := make(map[string]interface{})
+// 	response_wrapper["status"] = "success"
+// 	response_wrapper["data"] = metadata
 
-	js, err := json.Marshal(response_wrapper)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+// 	js, err := json.Marshal(response_wrapper)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
 
-	w.Write(js)
+// 	w.Write(js)
 
-}
+// }
