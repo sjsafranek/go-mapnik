@@ -72,7 +72,7 @@ func (t *TileServer) ServeTileRequest(w http.ResponseWriter, r *http.Request, tc
 
 func (t *TileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	if string.Contains(r.URL.Path, "metadata") {
+	if strings.Contains(r.URL.Path, "metadata") {
 		// todo: include layer
 		metadata := t.m.MetaDataHandler()
 		w.Header().Set("Content-Type", "application/json")
