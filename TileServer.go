@@ -71,6 +71,7 @@ func main() {
 	config = make(map[string]string)
 	config["default"] = "sampledata/stylesheet.xml"
 	config["sample"] = "sampledata/stylesheet.xml"
+	config["population"] = "demo/population.xml"
 	TileserverWithCaching(config)
 }
 
@@ -90,21 +91,29 @@ func main() {
 /*
 
 https://github.com/mapbox/mbtiles-spec/blob/master/1.2/spec.md
-https://github.com/sjsafranek/go-mapnik
+git clone https://github.com/sjsafranek/go-mapnik
 
-apt-get install libmapnik-dev
+
+sudo apt-get install libmapnik-dev
 
 export GOPATH="`pwd`"
 go get -d github.com/mattn/go-sqlite3
-
-
-go get -d github.com/sjsafranek/go-mapnik/mapnik
+go get -d github.com/lib/pq
 
 cd mapnik/
 ./configure.bash
 cd ../
+
 go run TileServer.go
 
 
+
+sudo -i -u postgres
+
+
+
+
+
 */
+
 

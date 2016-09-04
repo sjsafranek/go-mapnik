@@ -38,7 +38,7 @@ func (t *TileServer) AddMapnikLayer(layerName string, stylesheet string) {
 var pathRegex = regexp.MustCompile(`/([A-Za-z0-9]+)/([0-9]+)/([0-9]+)/([0-9]+)\.png`)
 
 func (t *TileServer) ServeTileRequest(w http.ResponseWriter, r *http.Request, tc TileCoord) {
-	log.Println(r.RemoteAddr, tc)
+	// log.Println(r.RemoteAddr, tc)
 	ch := make(chan TileFetchResult)
 
 	tr := TileFetchRequest{tc, ch}
