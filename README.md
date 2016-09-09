@@ -6,6 +6,11 @@ http://github.com/mapnik/mapnik)
 
 These bindings rely on http://github.com/springmeyer/mapnik-c-api. 
 
+Requires
+-----------
+### Postgresql 9.5
+
+
 Installation
 -----------
 
@@ -58,6 +63,14 @@ Usage
 -----
 
 See `demo.go` for some usage examples.
+
+
+
+MBTiles
+-------
+
+https://github.com/mapbox/mbtiles-spec/blob/master/1.2/spec.md
+
 
 
 Related Work 

@@ -1,19 +1,13 @@
 package maptiles
 
 import (
-	// "crypto/md5"
 	"database/sql"
-	"log"
-	"os"
-
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var logger *log.Logger = log.New(os.Stdout, "[TILE] ", log.LUTC|log.Ldate|log.Ltime|log.Lshortfile|log.Lmicroseconds)
-
 // MBTiles 1.2-compatible Tile Db with multi-layer support.
 // Was named Mbtiles before, hence the use of *m in methods.
-type TileDb struct {
+type TileDbSqlite3 struct {
 	db          *sql.DB
 	requestChan chan TileFetchRequest
 	insertChan  chan TileFetchResult
@@ -21,8 +15,8 @@ type TileDb struct {
 	qc          chan bool
 }
 
-func NewTileDb(path string) *TileDb {
-	m := TileDb{}
+func NewTileDbSqlite(path string) *TileDbSqlite3 {
+	m := TileDbSqlite3{}
 	var err error
 	m.db, err = sql.Open("sqlite3", path)
 	if err != nil {
@@ -61,7 +55,7 @@ func NewTileDb(path string) *TileDb {
 	return &m
 }
 
-func (self *TileDb) readLayers() {
+func (self *TileDbSqlite3) readLayers() {
 	self.layerIds = make(map[string]int)
 	rows, err := self.db.Query("SELECT rowid, layer_name FROM layers")
 	if err != nil {
@@ -80,7 +74,7 @@ func (self *TileDb) readLayers() {
 	}
 }
 
-func (self *TileDb) ensureLayer(layer string) {
+func (self *TileDbSqlite3) ensureLayer(layer string) {
 	if _, ok := self.layerIds[layer]; !ok {
 		if _, err := self.db.Exec("INSERT OR IGNORE INTO layers(layer_name) VALUES(?)", layer); err != nil {
 			logger.Println(err)
@@ -89,7 +83,7 @@ func (self *TileDb) ensureLayer(layer string) {
 	}
 }
 
-func (self *TileDb) Close() {
+func (self *TileDbSqlite3) Close() {
 	close(self.insertChan)
 	close(self.requestChan)
 	if self.qc != nil {
@@ -101,16 +95,16 @@ func (self *TileDb) Close() {
 
 }
 
-func (self TileDb) InsertQueue() chan<- TileFetchResult {
+func (self TileDbSqlite3) InsertQueue() chan<- TileFetchResult {
 	return self.insertChan
 }
 
-func (self TileDb) RequestQueue() chan<- TileFetchRequest {
+func (self TileDbSqlite3) RequestQueue() chan<- TileFetchRequest {
 	return self.requestChan
 }
 
 // Best executed in a dedicated go routine.
-func (self *TileDb) Run() {
+func (self *TileDbSqlite3) Run() {
 	self.qc = make(chan bool)
 	for {
 		select {
@@ -123,27 +117,18 @@ func (self *TileDb) Run() {
 	self.qc <- true
 }
 
-func (self *TileDb) insert(i TileFetchResult) {
+func (self *TileDbSqlite3) insert(i TileFetchResult) {
 	i.Coord.setTMS(true)
 	x, y, zoom, l := i.Coord.X, i.Coord.Y, i.Coord.Zoom, i.Coord.Layer
 	if l == "" {
 		l = "default"
 	}
-	// h := md5.New()
-	// _, err := h.Write(i.BlobPNG)
-	// if err != nil {
-	// 	logger.Println(err)
-	// 	return
-	// }
-	// s := fmt.Sprintf("%x", h.Sum(nil))
-	// row := self.db.QueryRow("SELECT 1 FROM tile_blobs WHERE checksum=?", s)
 	queryString := "SELECT tile_data FROM tiles WHERE layer_id=? AND zoom_level=? AND tile_column=? AND tile_row=?"
 	row := self.db.QueryRow(queryString, self.layerIds[l], zoom, x, y)
 	var dummy uint64
 	err := row.Scan(&dummy)
 	switch {
 	case err == sql.ErrNoRows:
-		// queryString = "REPLACE INTO tiles(tile_data) VALUES(?) WHERE layer_id=? AND zoom_level=? AND tile_column=? AND tile_row=?"
 		queryString = "UPDATE tiles SET tile_data=? WHERE layer_id=? AND zoom_level=? AND tile_column=? AND tile_row=?"
 		if _, err = self.db.Exec(queryString, i.BlobPNG, self.layerIds[l], zoom, x, y); err != nil {
 			logger.Println("error during insert", err)
@@ -156,14 +141,13 @@ func (self *TileDb) insert(i TileFetchResult) {
 		logger.Println("Reusing blob", self.layerIds[l], zoom, x, y)
 	}
 	self.ensureLayer(l)
-	// queryString = "REPLACE INTO tiles VALUES(?, ?, ?, ?, ?)"
 	queryString = "REPLACE INTO tiles VALUES(?, ?, ?, ?, ?)"
 	if _, err = self.db.Exec(queryString, self.layerIds[l], zoom, x, y, i.BlobPNG); err != nil {
 		logger.Println(err)
 	}
 }
 
-func (self *TileDb) fetch(r TileFetchRequest) {
+func (self *TileDbSqlite3) fetch(r TileFetchRequest) {
 	r.Coord.setTMS(true)
 	zoom, x, y, l := r.Coord.Zoom, r.Coord.X, r.Coord.Y, r.Coord.Layer
 	if l == "" {
@@ -193,7 +177,7 @@ func (self *TileDb) fetch(r TileFetchRequest) {
 }
 
 // gets tile data
-func (self *TileDb) MetaDataHandler() map[string]string {
+func (self *TileDbSqlite3) MetaDataHandler() map[string]string {
 	rows, _ := self.db.Query("SELECT * FROM metadata")
 	metadata :=  make(map[string]string)
 	for rows.Next() {

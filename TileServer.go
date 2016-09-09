@@ -1,117 +1,101 @@
 package main
 
-// This file contains various demo applications of the go-mapnik package
-
 import (
-	"fmt"
-	"io/ioutil"
 	"net/http"
 	"flag"
 	"log"
+	"os"
 
-	"./mapnik"
 	"./maptiles"
 )
 
 var (
 	config map[string]string
+	engine string
 	port string
+	db_cache string
 )
 
-
-// Render a simple map of europe to a PNG file
-func SimpleExample(map_file string) {
-	m := mapnik.NewMap(1600, 1200)
-	defer m.Free()
-	m.Load(map_file)
-	fmt.Println(m.SRS())
-	// Perform a projection that is only neccessary because stylesheet.xml
-	// is using EPSG:3857 rather than WGS84
-	p := m.Projection()
-	ll := p.Forward(mapnik.Coord{0, 35})  // 0 degrees longitude, 35 degrees north
-	ur := p.Forward(mapnik.Coord{16, 70}) // 16 degrees east, 70 degrees north
-	m.ZoomToMinMax(ll.X, ll.Y, ur.X, ur.Y)
-	blob, err := m.RenderToMemoryPng()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	ioutil.WriteFile("mapnik.png", blob, 0644)
-}
+var logger *log.Logger = log.New(os.Stdout, "[Go-Mapnik] ", log.LUTC|log.Ldate|log.Ltime|log.Lshortfile|log.Lmicroseconds)
 
 // Serve a single stylesheet via HTTP. Open view_tileserver.html in your browser
 // to see the results.
 // The created tiles are cached in an sqlite database (MBTiles 1.2 conform) so
 // successive access a tile is much faster.
-func TileserverWithCaching(layer_config map[string]string) {
-	cache := "gomapnikcache.mbtiles"
-	// os.Remove(cache)
-	t := maptiles.NewTileServer(cache)
-	for i := range layer_config {
-		t.AddMapnikLayer(i, layer_config[i])
+func TileserverWithCaching(engine string, layer_config map[string]string) {
+	if engine == "postgres" {
+		t := maptiles.NewTileServerPostgres(db_cache)
+		for i := range layer_config {
+			t.AddMapnikLayer(i, layer_config[i])
+		}
+		logger.Println("Connecting to postgres databas:")
+		logger.Println("***", db_cache)
+		logger.Printf("Magic happens on port %s...", port)
+		logger.Fatal(http.ListenAndServe("0.0.0.0:"+port, t))
+	} else {
+		t := maptiles.NewTileServerSqlite(db_cache)
+		for i := range layer_config {
+			t.AddMapnikLayer(i, layer_config[i])
+		}
+		logger.Println("Connecting to sqlite3 database:")
+		logger.Println("***", db_cache)
+		logger.Printf("Magic happens on port %s...", port)
+		logger.Fatal(http.ListenAndServe("0.0.0.0:"+port, t))
 	}
-	// CONFIG FILE
-	log.Printf("Magic happens on port %s...", port)
-	log.Fatal(http.ListenAndServe("0.0.0.0:"+port, t))
+
 }
 
-
 func init() {
-	flag.StringVar(&port, "p", "8080", "server [port]")
+	// TODO: add config file
+	flag.StringVar(&port, "p", "8080", "server port")
+	flag.StringVar(&engine, "e", "sqlite", "database engine [sqlite or postgres]")
+	flag.StringVar(&db_cache, "d", "gomapnikcache.mbtiles", "tile cache database")
 	flag.Parse()
+	if engine != "sqlite" {
+		if engine != "postgres" {
+			logger.Fatal("Unsupported database engines")
+		}
+	}
 }
 
 // Before uncommenting the GenerateOSMTiles call make sure you have
 // the neccessary OSM sources. Consult OSM wiki for details.
 func main() {
-	// SimpleExample()
-	//GenerateOSMTiles()
 	config = make(map[string]string)
-	config["default"] = "sampledata/stylesheet.xml"
-	config["sample"] = "sampledata/stylesheet.xml"
-	config["population"] = "demo/population.xml"
-	TileserverWithCaching(config)
+	config["default"] = "sampledata/world/stylesheet.xml"
+	config["sample"] = "sampledata/world/stylesheet.xml"
+	config["population"] = "sampledata/world_population/population.xml"
+	TileserverWithCaching(engine, config)
 }
-
 
 
 /*
 
-{
-	"default": "sampledata/stylesheet.xml",
-	"sample": "sampledata/stylesheet.xml"
-}
+// create user for linux
+stefan@stefan:~$ adduser mapnik
+*** password 'dev'
 
-*/
+// create new postgres user and database table 
+stefan@stefan:~$ sudo -i -u postgres
+postgres@stefan:~$ psql
+postgres=# CREATE USER mapnik WITH PASSWORD 'dev';
+postgres=# CREATE DATABASE mbtiles;
+postgres=# GRANT ALL PRIVILEGES ON DATABASE mbtiles TO mapnik;
 
+// check
+stefan@stefan:~$ sudo -i -u mapnik
+mapnik@stefan:~$ psql -d mbtiles -U mapnik -W dev
 
+// Run with Postgresql
+stefan@stefan:~$ go run TileServer.go -e postgres -d postgres://mapnik:dev@localhost/mbtiles
 
-/*
-
-https://github.com/mapbox/mbtiles-spec/blob/master/1.2/spec.md
-git clone https://github.com/sjsafranek/go-mapnik
-
-
-sudo apt-get install libmapnik-dev
-
-export GOPATH="`pwd`"
-go get -d github.com/mattn/go-sqlite3
-go get -d github.com/lib/pq
-
-cd mapnik/
-./configure.bash
-cd ../
-
-go run TileServer.go
+// Run with Sqlite3
+stefan@stefan:~$ go run TileServer.go -e sqlite -d gomapnikcache.mbtiles
 
 
-
-sudo -i -u postgres
-
-
-
+su - mapnik
+sudo -i -u mapnik
 
 
 */
-
 
