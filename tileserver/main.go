@@ -4,12 +4,16 @@ import (
 	"fmt"
 	"net/http"
 	"flag"
-	"log"
+	//"log"
 	"os"
 	"io/ioutil"
 	"encoding/json"
 
 	"tileserver/maptiles"
+	"tileserver/ligneous"
+	
+	//seelog "github.com/cihub/seelog"
+	log "github.com/cihub/seelog"
 )
 
 type Config struct {
@@ -25,9 +29,13 @@ var (
 	// port string
 	// db_cache string
 	config_file string
+	print_version bool
+	version string = "0.1.0" 
+	//logger seelog.LoggerInterface
 )
 
-var logger *log.Logger = log.New(os.Stdout, "[TileServer] ", log.LUTC|log.Ldate|log.Ltime|log.Lshortfile|log.Lmicroseconds)
+//var logger *log.Logger = log.New(os.Stdout, "[TileServer] ", log.LUTC|log.Ldate|log.Ltime|log.Lshortfile|log.Lmicroseconds)
+
 
 // Serve a single stylesheet via HTTP. Open view_tileserver.html in your browser
 // to see the results.
@@ -40,19 +48,19 @@ func TileserverWithCaching(engine string, layer_config map[string]string) {
 		for i := range layer_config {
 			t.AddMapnikLayer(i, layer_config[i])
 		}
-		logger.Println("Connecting to postgres database:")
-		logger.Println("***", config.Cache)
-		logger.Printf("Magic happens on port %v...", config.Port)
-		logger.Fatal(http.ListenAndServe(bind, t))
+		log.Info("Connecting to postgres database:")
+		log.Info("***", config.Cache)
+		log.Info("Magic happens on port %v...", config.Port)
+		log.Error(http.ListenAndServe(bind, t))
 	} else {
 		t := maptiles.NewTileServerSqlite(config.Cache)
 		for i := range layer_config {
 			t.AddMapnikLayer(i, layer_config[i])
 		}
-		logger.Println("Connecting to sqlite3 database:")
-		logger.Println("***", config.Cache)
-		logger.Printf("Magic happens on port %v...", config.Port)
-		logger.Fatal(http.ListenAndServe(bind, t))
+		log.Info("Connecting to sqlite3 database:")
+		log.Info("***", config.Cache)
+		log.Info("Magic happens on port %v...", config.Port)
+		log.Error(http.ListenAndServe(bind, t))
 	}
 
 }
@@ -63,12 +71,25 @@ func init() {
 	// flag.StringVar(&engine, "e", "sqlite", "database engine [sqlite or postgres]")
 	// flag.StringVar(&db_cache, "d", "tilecache.mbtiles", "tile cache database")
 	flag.StringVar(&config_file, "c", "", "tile server config")
+	flag.BoolVar(&print_version, "v", false, "version")
 	flag.Parse()
 	// if engine != "sqlite" {
 	// 	if engine != "postgres" {
 	// 		logger.Fatal("Unsupported database engines")
 	// 	}
 	// }
+	if print_version {
+		fmt.Println("TileServer",version)
+		os.Exit(1)
+	}
+	
+	logger, err := ligneous.InitLogger()
+	if nil != err {
+		fmt.Println("Error starting logging")
+		os.Exit(1)
+	}
+	log.UseLogger(logger)
+
 }
 
 func getConfig() {
@@ -82,18 +103,21 @@ func getConfig() {
 
 		err = json.Unmarshal(file, &config)
 		if err != nil {
-			logger.Fatal("error:", err)
+			fmt.Println("error:", err)
+			os.Exit(1)
 		}
 
 		if config.Engine != "sqlite" {
 			if config.Engine != "postgres" {
-				logger.Fatal("Unsupported database engines")
+				fmt.Println("Unsupported database engine")
+				os.Exit(1)
 			}
 		}
 
-		logger.Println("config:",config)
+		log.Debug(config)
 	} else {
-		logger.Fatal("file not found")
+		fmt.Println("Config file not found")
+		os.Exit(1)
 	}
 }
 

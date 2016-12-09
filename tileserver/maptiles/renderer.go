@@ -2,15 +2,31 @@ package maptiles
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"io/ioutil"
 	"net/http"
 
-	// "github.com/sjsafranek/go-mapnik/mapnik"
-	// "../mapnik"
+	"time"
+	"math/rand"
+
 	"tileserver/mapnik"
+	"tileserver/ligneous"
+	
+	log "github.com/cihub/seelog"
 )
+
+
+func init() {
+	logger, _ := ligneous.InitLogger()
+	log.UseLogger(logger)
+}
+
+
+func randomNum(min, max int) int {
+    rand.Seed(time.Now().Unix())
+    return rand.Intn(max - min) + min
+}
+
 
 type TileCoord struct {
 	X, Y, Zoom uint64
@@ -49,7 +65,7 @@ func NewTileRendererChan(stylesheet string) chan<- TileFetchRequest {
 			result := TileFetchResult{request.Coord, nil}
 			result.BlobPNG, err = t.RenderTile(request.Coord)
 			if err != nil {
-				log.Println("Error while rendering", request.Coord, ":", err.Error())
+				log.Error("Error while rendering", request.Coord, ":", err.Error())
 				result.BlobPNG = nil
 			}
 			request.OutChan <- result
@@ -71,7 +87,7 @@ func NewTileRenderer(stylesheet string) *TileRenderer {
 	t := new(TileRenderer)
 	var err error
 	if err != nil {
-		log.Fatal(err)
+		log.Critical(err)
 	}
 	t.m = mapnik.NewMap(256, 256)
 	t.m.Load(stylesheet)
@@ -124,18 +140,26 @@ func (t *TileRenderer) RenderTileZXY(zoom, x, y uint64) ([]byte, error) {
 	return blob, err
 }
 
+func (t *TileRenderer) subDomain() string {
+	subs := []string{"a","b","c"}
+	n := randomNum(0,3);
+	return subs[n]
+} 
+
 func (t *TileRenderer) HttpGetTileZXY(zoom, x, y uint64) ([]byte, error) {
+	//start := time.Now()
+	
 	tileUrl := strings.Replace(t.s, "{z}", fmt.Sprintf("%v", zoom), -1);
 	tileUrl = strings.Replace(tileUrl, "{x}", fmt.Sprintf("%v", x), -1);
 	tileUrl = strings.Replace(tileUrl, "{y}", fmt.Sprintf("%v", y), -1);
-	tileUrl = strings.Replace(tileUrl, "{s}", "a", -1);
-	//tileUrl = strings.Replace(tileUrl, "{s}", "b", -1);
-	//tileUrl = strings.Replace(tileUrl, "{s}", "c", -1);
+	tileUrl = strings.Replace(tileUrl, "{s}", t.subDomain(), -1);
 	
 	resp, err := http.Get(tileUrl)
-	//defer resp.Body.Close()
-	//log.Println(tileUrl, t.s)
 	blob, err := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
+	
+	//log.Debug( fmt.Sprintf("%v %v", tileUrl, time.Since(start)) )
+	log.Debug( "GET ", tileUrl )
+	
 	return blob, err
 }
