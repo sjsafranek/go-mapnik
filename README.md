@@ -12,11 +12,11 @@ Requires
 
 
 
-### Example PostgreSQL Setup:
+### PostgreSQL Setup:
 Instructions for linux
 #### Create new user
-`$ adduser mapnik`
-*** password 'dev'
+  `$ adduser mapnik`
+  *** password 'dev'
 #### create new postgres user and database table 
 $ sudo -i -u postgres
 $ psql
@@ -26,6 +26,11 @@ postgres=# GRANT ALL PRIVILEGES ON DATABASE mbtiles TO mapnik;
 #### Check setup
 $ sudo -i -u mapnik
 $ psql -d mbtiles -U mapnik -W dev
+
+
+### Config File
+
+
 
 ### Run with PostgreSQL
 $ ./bin/tileserver -e postgres -d postgres://mapnik:dev@localhost/mbtiles
