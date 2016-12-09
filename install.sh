@@ -14,12 +14,14 @@ if [ ! -d "`pwd`/pkg" ]; then
 fi
 if [ ! -d "`pwd`/src" ]; then
     mkdir src
-    #mkdir src/gospatial
+fi
+if [ ! -d "`pwd`/src/tileserver" ]; then
+    mkdir src/tileserver
 fi
 
 # Move source files
-# echo "copying source files..."
-# cp -R gospatial/* src/gospatial/
+echo "copying source files..."
+cp -R tileserver/* src/tileserver/
 
 # Download required libraries
 echo "checking requirements..."
