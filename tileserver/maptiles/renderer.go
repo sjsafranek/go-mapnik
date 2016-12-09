@@ -8,7 +8,8 @@ import (
 	"net/http"
 
 	// "github.com/sjsafranek/go-mapnik/mapnik"
-	"../mapnik"
+	// "../mapnik"
+	"tileserver/mapnik"
 )
 
 type TileCoord struct {
