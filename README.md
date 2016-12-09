@@ -11,6 +11,35 @@ Requires
 ### Postgresql 9.5
 
 
+
+### Example PostgreSQL Setup:
+Instructions for linux
+#### Create new user
+`$ adduser mapnik`
+*** password 'dev'
+#### create new postgres user and database table 
+$ sudo -i -u postgres
+$ psql
+postgres=# CREATE USER mapnik WITH PASSWORD 'dev';
+postgres=# CREATE DATABASE mbtiles;
+postgres=# GRANT ALL PRIVILEGES ON DATABASE mbtiles TO mapnik;
+#### Check setup
+$ sudo -i -u mapnik
+$ psql -d mbtiles -U mapnik -W dev
+
+### Run with PostgreSQL
+$ ./bin/tileserver -e postgres -d postgres://mapnik:dev@localhost/mbtiles
+
+### Run with Sqlite3
+$ ./bin/tileserver -e sqlite -d gomapnikcache.mbtiles
+
+
+su - mapnik
+sudo -i -u mapnik
+
+
+
+
 Installation
 -----------
 

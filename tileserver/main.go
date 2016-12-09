@@ -21,9 +21,9 @@ type Config struct {
 
 var (
 	config Config
-	//engine string
-	//port string
-	//db_cache string
+	// engine string
+	// port string
+	// db_cache string
 	config_file string
 )
 
@@ -40,9 +40,9 @@ func TileserverWithCaching(engine string, layer_config map[string]string) {
 		for i := range layer_config {
 			t.AddMapnikLayer(i, layer_config[i])
 		}
-		logger.Println("Connecting to postgres databas:")
+		logger.Println("Connecting to postgres database:")
 		logger.Println("***", config.Cache)
-		logger.Printf("Magic happens on port %s...", config.Port)
+		logger.Printf("Magic happens on port %v...", config.Port)
 		logger.Fatal(http.ListenAndServe(bind, t))
 	} else {
 		t := maptiles.NewTileServerSqlite(config.Cache)
@@ -51,7 +51,7 @@ func TileserverWithCaching(engine string, layer_config map[string]string) {
 		}
 		logger.Println("Connecting to sqlite3 database:")
 		logger.Println("***", config.Cache)
-		logger.Printf("Magic happens on port %s...", config.Port)
+		logger.Printf("Magic happens on port %v...", config.Port)
 		logger.Fatal(http.ListenAndServe(bind, t))
 	}
 
@@ -59,30 +59,39 @@ func TileserverWithCaching(engine string, layer_config map[string]string) {
 
 func init() {
 	// TODO: add config file
-	//flag.StringVar(&port, "p", "8080", "server port")
-	//flag.StringVar(&engine, "e", "sqlite", "database engine [sqlite or postgres]")
-	//flag.StringVar(&db_cache, "d", "tilecache.mbtiles", "tile cache database")
+	// flag.StringVar(&port, "p", "8080", "server port")
+	// flag.StringVar(&engine, "e", "sqlite", "database engine [sqlite or postgres]")
+	// flag.StringVar(&db_cache, "d", "tilecache.mbtiles", "tile cache database")
 	flag.StringVar(&config_file, "c", "", "tile server config")
 	flag.Parse()
-	if engine != "sqlite" {
-		if engine != "postgres" {
-			logger.Fatal("Unsupported database engines")
-		}
-	}
+	// if engine != "sqlite" {
+	// 	if engine != "postgres" {
+	// 		logger.Fatal("Unsupported database engines")
+	// 	}
+	// }
 }
 
 func getConfig() {
 	// check if file exists!!!
 	if _, err := os.Stat(config_file); err == nil {
+		
 		file, err := ioutil.ReadFile(config_file)
 		if err != nil {
 			panic(err)
 		}
-		// config = make(map[string]string)
+
 		err = json.Unmarshal(file, &config)
 		if err != nil {
-			logger.Println("error:", err)
+			logger.Fatal("error:", err)
 		}
+
+		if config.Engine != "sqlite" {
+			if config.Engine != "postgres" {
+				logger.Fatal("Unsupported database engines")
+			}
+		}
+
+		logger.Println("config:",config)
 	} else {
 		logger.Fatal("file not found")
 	}
@@ -92,38 +101,6 @@ func getConfig() {
 // the neccessary OSM sources. Consult OSM wiki for details.
 func main() {
 	getConfig()
-
 	TileserverWithCaching(config.Engine, config.Layers)
 }
-
-
-/*
-
-// create user for linux
-stefan@stefan:~$ adduser mapnik
-*** password 'dev'
-
-// create new postgres user and database table 
-stefan@stefan:~$ sudo -i -u postgres
-postgres@stefan:~$ psql
-postgres=# CREATE USER mapnik WITH PASSWORD 'dev';
-postgres=# CREATE DATABASE mbtiles;
-postgres=# GRANT ALL PRIVILEGES ON DATABASE mbtiles TO mapnik;
-
-// check
-stefan@stefan:~$ sudo -i -u mapnik
-mapnik@stefan:~$ psql -d mbtiles -U mapnik -W dev
-
-// Run with Postgresql
-stefan@stefan:~$ go run TileServer.go -e postgres -d postgres://mapnik:dev@localhost/mbtiles
-
-// Run with Sqlite3
-stefan@stefan:~$ go run TileServer.go -e sqlite -d gomapnikcache.mbtiles
-
-
-su - mapnik
-sudo -i -u mapnik
-
-
-*/
 
