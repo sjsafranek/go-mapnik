@@ -1,6 +1,0 @@
-	//if strings.Contains(stylesheet, ".xml") {
-	//	log.Println("mapnik xml")
-	//} else if strings.Contains(stylesheet, "http") && strings.Contains(stylesheet, "{z}/{x}/{y}.png") {
-	//	log.Printf("%s is a valid tileserver URL\n", stylesheet)
-	//}	
-	
