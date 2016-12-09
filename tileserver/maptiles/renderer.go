@@ -5,7 +5,7 @@ import (
 	"strings"
 	"io/ioutil"
 	"net/http"
-
+	"errors"
 	"time"
 	"math/rand"
 
@@ -147,8 +147,6 @@ func (t *TileRenderer) subDomain() string {
 } 
 
 func (t *TileRenderer) HttpGetTileZXY(zoom, x, y uint64) ([]byte, error) {
-	//start := time.Now()
-	
 	tileUrl := strings.Replace(t.s, "{z}", fmt.Sprintf("%v", zoom), -1);
 	tileUrl = strings.Replace(tileUrl, "{x}", fmt.Sprintf("%v", x), -1);
 	tileUrl = strings.Replace(tileUrl, "{y}", fmt.Sprintf("%v", y), -1);
@@ -158,8 +156,12 @@ func (t *TileRenderer) HttpGetTileZXY(zoom, x, y uint64) ([]byte, error) {
 	blob, err := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
 	
-	//log.Debug( fmt.Sprintf("%v %v", tileUrl, time.Since(start)) )
-	log.Debug( "GET ", tileUrl )
+	log.Debug( fmt.Sprintf("GET %v %v", tileUrl, resp.StatusCode) )
 	
+	if 200 != resp.StatusCode {
+		err := errors.New("Request error: "+ string(blob))
+		return []byte{}, err
+	}
+
 	return blob, err
 }
