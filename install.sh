@@ -14,7 +14,7 @@ if [ ! -d "`pwd`/pkg" ]; then
 fi
 if [ ! -d "`pwd`/src" ]; then
     mkdir src
-    mkdir src/gospatial
+    #mkdir src/gospatial
 fi
 
 # Move source files
