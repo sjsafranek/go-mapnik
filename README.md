@@ -40,7 +40,8 @@ $ psql -d mbtiles -U mapnik -W dev
     "port": 8080
   }
 
-### Run with PostgreSQL::
+### Run with PostgreSQL
+config.json:
   {
     "cache": "postgres://mapnik:dev@localhost/mbtiles",
     "engine": "postgres",
@@ -55,7 +56,7 @@ $ psql -d mbtiles -U mapnik -W dev
 
 
 ### Run with Sqlite3
-$ ./bin/tileserver::
+config.json:
   {
     "cache": "tilecache.mbtiles",
     "engine": "sqlite",
