@@ -27,47 +27,38 @@ $ sudo -i -u mapnik
 $ psql -d mbtiles -U mapnik -W dev
 
 
-### Config File::
-  {
-    "cache": "tilecache.mbtiles",
-    "engine": "sqlite",
-    "layers": {
-      "default": "sampledata/world/stylesheet.xml",
-      "sample": "sampledata/world/stylesheet.xml",
-      "population": "sampledata/world_population/population.xml",
-      "osm": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-    },
-    "port": 8080
-  }
-
 ### Run with PostgreSQL
 config.json:
-  {
-    "cache": "postgres://mapnik:dev@localhost/mbtiles",
-    "engine": "postgres",
-    "layers": {
-      "default": "sampledata/world/stylesheet.xml",
-      "sample": "sampledata/world/stylesheet.xml",
-      "population": "sampledata/world_population/population.xml",
-      "osm": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-    },
-    "port": 8080
-  }
+`{
+  "cache": "postgres://mapnik:dev@localhost/mbtiles",
+  "engine": "postgres",
+  "layers": {
+    "default": "sampledata/world/stylesheet.xml",
+    "sample": "sampledata/world/stylesheet.xml",
+    "population": "sampledata/world_population/population.xml",
+    "osm": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+  },
+  "port": 8080
+}`
+
+  `$ ./bin/tileserver -c config.json`
 
 
 ### Run with Sqlite3
 config.json:
-  {
-    "cache": "tilecache.mbtiles",
-    "engine": "sqlite",
-    "layers": {
-      "default": "sampledata/world/stylesheet.xml",
-      "sample": "sampledata/world/stylesheet.xml",
-      "population": "sampledata/world_population/population.xml",
-      "osm": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-    },
-    "port": 8080
-  }
+`{
+  "cache": "tilecache.mbtiles",
+  "engine": "sqlite",
+  "layers": {
+    "default": "sampledata/world/stylesheet.xml",
+    "sample": "sampledata/world/stylesheet.xml",
+    "population": "sampledata/world_population/population.xml",
+    "osm": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+  },
+  "port": 8080
+}`
+
+  `$ ./bin/tileserver -c config.json`
 
 su - mapnik
 sudo -i -u mapnik
