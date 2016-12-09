@@ -127,6 +127,10 @@ func (t *TileRenderer) HttpGetTileZXY(zoom, x, y uint64) ([]byte, error) {
 	tileUrl := strings.Replace(t.s, "{z}", fmt.Sprintf("%v", zoom), -1);
 	tileUrl = strings.Replace(tileUrl, "{x}", fmt.Sprintf("%v", x), -1);
 	tileUrl = strings.Replace(tileUrl, "{y}", fmt.Sprintf("%v", y), -1);
+	tileUrl = strings.Replace(tileUrl, "{s}", "a", -1);
+	//tileUrl = strings.Replace(tileUrl, "{s}", "b", -1);
+	//tileUrl = strings.Replace(tileUrl, "{s}", "c", -1);
+	
 	resp, err := http.Get(tileUrl)
 	//defer resp.Body.Close()
 	//log.Println(tileUrl, t.s)

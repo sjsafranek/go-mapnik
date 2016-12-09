@@ -66,7 +66,7 @@ func main() {
 	config["sample"] = "sampledata/world/stylesheet.xml"
 	config["population"] = "sampledata/world_population/population.xml"
 	//config["osm"] = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-	config["osm"] = "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
+	config["osm"] = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
 	TileserverWithCaching(engine, config)
 }
 
