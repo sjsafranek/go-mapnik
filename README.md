@@ -62,6 +62,7 @@ config.json:
 
   `$ ./bin/tileserver -c config.json`
 
+
 su - mapnik
 sudo -i -u mapnik
 
