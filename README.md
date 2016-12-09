@@ -16,12 +16,14 @@ Requires
 #### Create new user
   `$ adduser mapnik`
   *** password 'dev'
+
 #### create new postgres user and database table 
 $ sudo -i -u postgres
 $ psql
-postgres=# CREATE USER mapnik WITH PASSWORD 'dev';
-postgres=# CREATE DATABASE mbtiles;
-postgres=# GRANT ALL PRIVILEGES ON DATABASE mbtiles TO mapnik;
+ - postgres=# CREATE USER mapnik WITH PASSWORD 'dev';
+ - postgres=# CREATE DATABASE mbtiles;
+ - postgres=# GRANT ALL PRIVILEGES ON DATABASE mbtiles TO mapnik;
+
 #### Check setup
 $ sudo -i -u mapnik
 $ psql -d mbtiles -U mapnik -W dev
