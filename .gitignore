@@ -29,3 +29,16 @@ mapnik/gen_import.go
 # Databases
 *.sqlite3
 *.mbtiles
+
+
+# Project directories
+bin/
+src/
+pkg/
+log/
+
+# Misc
+*.tar.gz
+
+
+
