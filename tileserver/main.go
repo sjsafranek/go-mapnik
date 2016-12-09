@@ -20,11 +20,10 @@ type Config struct {
 }
 
 var (
-	//config map[string]string
 	config Config
-	engine string
-	port string
-	db_cache string
+	//engine string
+	//port string
+	//db_cache string
 	config_file string
 )
 
