@@ -1,14 +1,22 @@
 package maptiles
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
 	"encoding/json"
 	"time"
 	"runtime"
+
+	"tileserver/ligneous"
+	log "github.com/cihub/seelog"
 )
+
+func init() {
+	logger, _ := ligneous.InitLogger()
+	log.UseLogger(logger)
+}
 
 // TODO serve list of registered layers per HTTP (preferably leafletjs-compatible js-array)
 
@@ -60,7 +68,7 @@ func (self *TileServerPostgres) ServeTileRequest(w http.ResponseWriter, r *http.
 	w.Header().Set("Content-Type", "image/png")
 	_, err := w.Write(result.BlobPNG)
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
 	if needsInsert {
 		self.m.InsertQueue() <- result // insert newly rendered tile into cache db
@@ -69,21 +77,26 @@ func (self *TileServerPostgres) ServeTileRequest(w http.ResponseWriter, r *http.
 
 func (self *TileServerPostgres) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	log.Println(r.RemoteAddr, r.URL.Path)
+	start := time.Now()
 
 	if "/" == r.URL.Path {
+		log.Info( fmt.Sprintf("%v %v %v ",r.RemoteAddr, r.URL.Path, time.Since(start)) )
 		self.IndexHandler(w, r)
 		return
 	} else if "/ping" == r.URL.Path {
+		log.Info( fmt.Sprintf("%v %v %v ",r.RemoteAddr, r.URL.Path, time.Since(start)) )
 		self.PingHandler(w, r)
 		return
 	} else if "/server" == r.URL.Path {
+		log.Info( fmt.Sprintf("%v %v %v ",r.RemoteAddr, r.URL.Path, time.Since(start)) )
 		self.ServerHandler(w, r)
 		return
 	} else if "/metadata" == r.URL.Path {
+		log.Info( fmt.Sprintf("%v %v %v ",r.RemoteAddr, r.URL.Path, time.Since(start)) )
 		self.MetadataHandler(w, r)
 		return
 	}else if "/tilelayers" == r.URL.Path {
+		log.Info( fmt.Sprintf("%v %v %v ",r.RemoteAddr, r.URL.Path, time.Since(start)) )
 		self.TileLayersHandler(w, r)
 		return
 	}
@@ -92,7 +105,9 @@ func (self *TileServerPostgres) ServeHTTP(w http.ResponseWriter, r *http.Request
 	path := pathRegex.FindStringSubmatch(r.URL.Path)
 
 	if path == nil {
-		http.NotFound(w, r)
+		log.Info( fmt.Sprintf("%v %v %v ",r.RemoteAddr, r.URL.Path, time.Since(start)) )
+		self.RequestErrorHandler(w, r)
+		//http.NotFound(w, r)
 		return
 	}
 
@@ -102,13 +117,35 @@ func (self *TileServerPostgres) ServeHTTP(w http.ResponseWriter, r *http.Request
 	y, _ := strconv.ParseUint(path[4], 10, 64)
 
 	self.ServeTileRequest(w, r, TileCoord{x, y, z, self.TmsSchema, l})
+
+	msg := fmt.Sprintf("%v %v %v ",r.RemoteAddr, r.URL.Path, time.Since(start))
+	log.Info(msg)
 }
 
+func (self *TileServerPostgres) RequestErrorHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	response := make(map[string]interface{})
+	response["status"] = "error"
+	result := make(map[string]interface{})
+	result["message"] = "Expecting /{datasource}/{z}/{x}/{y}.png"
+	response["data"] = result
+	js, err := json.Marshal(response)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(js)
+}
 
 func (self *TileServerPostgres) IndexHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	response := `{"status":"ok","data":{"message":"Hello there ladies and gentlemen!"}}`
+	response := make(map[string]interface{})
+	response["status"] = "ok"
+	result := make(map[string]interface{})
+	result["message"] = "Hello there ladies and gentlemen!"
+	response["data"] = result
 	js, err := json.Marshal(response)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -137,8 +174,12 @@ func (self *TileServerPostgres) MetadataHandler(w http.ResponseWriter, r *http.R
 func (self *TileServerPostgres) PingHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	data := `{"status": "success", "data": {"result": "pong"}}`
-	js, err := json.Marshal(data)
+	response := make(map[string]interface{})
+	response["status"] = "ok"
+	result := make(map[string]interface{})
+	result["result"] = "Pong"
+	response["data"] = result
+	js, err := json.Marshal(response)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

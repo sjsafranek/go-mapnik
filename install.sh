@@ -18,6 +18,9 @@ fi
 if [ ! -d "`pwd`/src/tileserver" ]; then
     mkdir src/tileserver
 fi
+if [ ! -d "`pwd`/log" ]; then
+    mkdir log
+fi
 
 # Move source files
 echo "copying source files..."
@@ -34,6 +37,12 @@ if [ ! -d "`pwd`/src/github.com/lib/pq" ]; then
     echo "downloading pg..."
     go get github.com/lib/pq
 fi
+
+if [ ! -d "`pwd`/src/github.com/cihub/seelog" ]; then
+    echo "downloading seelog..."
+    go get github.com/cihub/seelog
+fi
+
 
 # sudo apt-get install libmapnik-dev
 # cd mapnik/
