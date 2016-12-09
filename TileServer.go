@@ -16,7 +16,7 @@ var (
 	db_cache string
 )
 
-var logger *log.Logger = log.New(os.Stdout, "[Go-Mapnik] ", log.LUTC|log.Ldate|log.Ltime|log.Lshortfile|log.Lmicroseconds)
+var logger *log.Logger = log.New(os.Stdout, "[GoMapnikTiles] ", log.LUTC|log.Ldate|log.Ltime|log.Lshortfile|log.Lmicroseconds)
 
 // Serve a single stylesheet via HTTP. Open view_tileserver.html in your browser
 // to see the results.
@@ -65,6 +65,8 @@ func main() {
 	config["default"] = "sampledata/world/stylesheet.xml"
 	config["sample"] = "sampledata/world/stylesheet.xml"
 	config["population"] = "sampledata/world_population/population.xml"
+	//config["osm"] = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+	config["osm"] = "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
 	TileserverWithCaching(engine, config)
 }
 

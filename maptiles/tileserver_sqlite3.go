@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"time"
 	"runtime"
+//	"strings"
 )
 
 // TODO serve list of registered layers per HTTP (preferably leafletjs-compatible js-array)
@@ -32,7 +33,11 @@ func NewTileServerSqlite(cacheFile string) *TileServerSqlite {
 }
 
 func (self *TileServerSqlite) AddMapnikLayer(layerName string, stylesheet string) {
-	self.lmp.AddRenderer(layerName, stylesheet)
+	//if strings.Contains(stylesheet, ".xml") {
+		self.lmp.AddRenderer(layerName, stylesheet)
+	//} else if strings.Contains(stylesheet, "http") && strings.Contains(stylesheet, "{z}/{x}/{y}.png") {
+	//	log.Printf("%s is a valid tileserver URL\n", stylesheet)
+	//}
 }
 
 func (self *TileServerSqlite) ServeTileRequest(w http.ResponseWriter, r *http.Request, tc TileCoord) {

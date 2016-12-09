@@ -3,6 +3,9 @@ package maptiles
 import (
 	"fmt"
 	"log"
+	"strings"
+	"io/ioutil"
+	"net/http"
 
 	// "github.com/sjsafranek/go-mapnik/mapnik"
 	"../mapnik"
@@ -59,6 +62,8 @@ func NewTileRendererChan(stylesheet string) chan<- TileFetchRequest {
 type TileRenderer struct {
 	m  *mapnik.Map
 	mp mapnik.Projection
+	proxy bool
+	s string
 }
 
 func NewTileRenderer(stylesheet string) *TileRenderer {
@@ -71,12 +76,24 @@ func NewTileRenderer(stylesheet string) *TileRenderer {
 	t.m.Load(stylesheet)
 	t.mp = t.m.Projection()
 
+	if strings.Contains(stylesheet, ".xml") {
+		t.proxy = false
+		t.s = stylesheet
+	} else if strings.Contains(stylesheet, "http") && strings.Contains(stylesheet, "{z}/{x}/{y}.png") {
+		t.proxy = true
+		t.s = stylesheet
+	}
+
 	return t
 }
 
 func (t *TileRenderer) RenderTile(c TileCoord) ([]byte, error) {
 	c.setTMS(false)
-	return t.RenderTileZXY(c.Zoom, c.X, c.Y)
+	if t.proxy {
+		return t.HttpGetTileZXY(c.Zoom, c.X, c.Y)
+	} else {
+		return t.RenderTileZXY(c.Zoom, c.X, c.Y)
+	}
 }
 
 // Render a tile with coordinates in Google tile format.
@@ -97,11 +114,23 @@ func (t *TileRenderer) RenderTileZXY(zoom, x, y uint64) ([]byte, error) {
 	c0 := t.mp.Forward(mapnik.Coord{l0[0], l0[1]})
 	c1 := t.mp.Forward(mapnik.Coord{l1[0], l1[1]})
 
-	// Bounding box for the Tile
+	// Bounding box for the Tile  
 	t.m.Resize(256, 256)
 	t.m.ZoomToMinMax(c0.X, c0.Y, c1.X, c1.Y)
-	t.m.SetBufferSize(128)
+	t.m.SetBufferSize(128)  
 
 	blob, err := t.m.RenderToMemoryPng()
+	return blob, err
+}
+
+func (t *TileRenderer) HttpGetTileZXY(zoom, x, y uint64) ([]byte, error) {
+	tileUrl := strings.Replace(t.s, "{z}", fmt.Sprintf("%v", zoom), -1);
+	tileUrl = strings.Replace(tileUrl, "{x}", fmt.Sprintf("%v", x), -1);
+	tileUrl = strings.Replace(tileUrl, "{y}", fmt.Sprintf("%v", y), -1);
+	resp, err := http.Get(tileUrl)
+	//defer resp.Body.Close()
+	//log.Println(tileUrl, t.s)
+	blob, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
 	return blob, err
 }
