@@ -12,8 +12,7 @@ Requires
 
 
 
-### PostgreSQL Setup:
-Instructions for linux
+### PostgreSQL Setup (Linux):
 #### Create new user
   `$ adduser mapnik`
   *** password 'dev'
@@ -29,8 +28,17 @@ $ psql -d mbtiles -U mapnik -W dev
 
 
 ### Config File
-
-
+  {
+    "cache": "tilecache.mbtiles",
+    "engine": "sqlite",
+    "layers": {
+      "default": "sampledata/world/stylesheet.xml",
+      "sample": "sampledata/world/stylesheet.xml",
+      "population": "sampledata/world_population/population.xml",
+      "osm": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+    },
+    "port": 8080
+  }
 
 ### Run with PostgreSQL
 $ ./bin/tileserver -e postgres -d postgres://mapnik:dev@localhost/mbtiles
