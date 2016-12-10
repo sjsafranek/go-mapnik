@@ -3,7 +3,14 @@ package maptiles
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
+	"tileserver/ligneous"
+	log "github.com/cihub/seelog"
 )
+
+func init() {
+	logger, _ := ligneous.InitLogger()
+	log.UseLogger(logger)
+}
 
 // MBTiles 1.2-compatible Tile Db with multi-layer support.
 // Was named Mbtiles before, hence the use of *m in methods.
@@ -20,7 +27,7 @@ func NewTileDbSqlite(path string) *TileDbSqlite3 {
 	var err error
 	m.db, err = sql.Open("sqlite3", path)
 	if err != nil {
-		logger.Println("Error opening db", err.Error())
+		log.Error("Error opening db", err.Error())
 		return nil
 	}
 	queries := []string{
@@ -41,8 +48,8 @@ func NewTileDbSqlite(path string) *TileDbSqlite3 {
 	for _, query := range queries {
 		_, err = m.db.Exec(query)
 		if err != nil {
-			logger.Println("Error setting up db", err.Error())
-			logger.Println(query, "\n");
+			log.Error("Error setting up db", err.Error())
+			log.Debug(query, "\n");
 			return nil
 		}
 	}
@@ -59,25 +66,25 @@ func (self *TileDbSqlite3) readLayers() {
 	self.layerIds = make(map[string]int)
 	rows, err := self.db.Query("SELECT rowid, layer_name FROM layers")
 	if err != nil {
-		logger.Fatal("Error fetching layer definitions", err.Error())
+		log.Error("Error fetching layer definitions", err.Error())
 	}
 	var s string
 	var i int
 	for rows.Next() {
 		if err := rows.Scan(&i, &s); err != nil {
-			logger.Fatal(err)
+			log.Error(err)
 		}
 		self.layerIds[s] = i
 	}
 	if err := rows.Err(); err != nil {
-		logger.Fatal(err)
+		log.Error(err)
 	}
 }
 
 func (self *TileDbSqlite3) ensureLayer(layer string) {
 	if _, ok := self.layerIds[layer]; !ok {
 		if _, err := self.db.Exec("INSERT OR IGNORE INTO layers(layer_name) VALUES(?)", layer); err != nil {
-			logger.Println(err)
+			log.Error(err)
 		}
 		self.readLayers()
 	}
@@ -90,7 +97,7 @@ func (self *TileDbSqlite3) Close() {
 		<-self.qc // block until channel qc is closed (meaning Run() is finished)
 	}
 	if err := self.db.Close(); err != nil {
-		logger.Print(err)
+		log.Error(err)
 	}
 
 }
@@ -117,12 +124,12 @@ func (self *TileDbSqlite3) Run() {
 	self.qc <- true
 }
 
-func (self *TileDbSqlite3) insert(i TileFetchResult) {
+func (self *TileDbSqlite3) insert(i TileFetchResult) {	
 	i.Coord.setTMS(true)
 	x, y, zoom, l := i.Coord.X, i.Coord.Y, i.Coord.Zoom, i.Coord.Layer
-	if l == "" {
-		l = "default"
-	}
+	//if l == "" {
+	//	l = "default"
+	//}
 	queryString := "SELECT tile_data FROM tiles WHERE layer_id=? AND zoom_level=? AND tile_column=? AND tile_row=?"
 	row := self.db.QueryRow(queryString, self.layerIds[l], zoom, x, y)
 	var dummy uint64
@@ -131,28 +138,29 @@ func (self *TileDbSqlite3) insert(i TileFetchResult) {
 	case err == sql.ErrNoRows:
 		queryString = "UPDATE tiles SET tile_data=? WHERE layer_id=? AND zoom_level=? AND tile_column=? AND tile_row=?"
 		if _, err = self.db.Exec(queryString, i.BlobPNG, self.layerIds[l], zoom, x, y); err != nil {
-			logger.Println("error during insert", err)
+			log.Error("error during insert", err)
 			return
 		}
+		log.Trace("Insert blob ", self.layerIds[l], zoom, x, y)
 	case err != nil:
-		logger.Println("error during test", err)
+		log.Error(err)
 		return
 	default:
-		logger.Println("Reusing blob", self.layerIds[l], zoom, x, y)
+		log.Trace("Insert blob ", self.layerIds[l], zoom, x, y)
 	}
 	self.ensureLayer(l)
 	queryString = "REPLACE INTO tiles VALUES(?, ?, ?, ?, ?)"
 	if _, err = self.db.Exec(queryString, self.layerIds[l], zoom, x, y, i.BlobPNG); err != nil {
-		logger.Println(err)
+		log.Error(err)
 	}
 }
 
 func (self *TileDbSqlite3) fetch(r TileFetchRequest) {
 	r.Coord.setTMS(true)
 	zoom, x, y, l := r.Coord.Zoom, r.Coord.X, r.Coord.Y, r.Coord.Layer
-	if l == "" {
-		l = "default"
-	}
+	//if l == "" {
+	//	l = "default"
+	//}
 	result := TileFetchResult{r.Coord, nil}
 	queryString := `
 		SELECT tile_data 
@@ -169,9 +177,10 @@ func (self *TileDbSqlite3) fetch(r TileFetchRequest) {
 	case err == sql.ErrNoRows:
 		result.BlobPNG = nil
 	case err != nil:
-		logger.Println(err)
+		log.Error(err)
 	default:
 		result.BlobPNG = blob
+		log.Trace("Reusing blob ", self.layerIds[l], zoom, x, y)
 	}
 	r.OutChan <- result
 }

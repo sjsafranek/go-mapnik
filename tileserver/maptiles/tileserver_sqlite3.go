@@ -106,7 +106,6 @@ func (self *TileServerSqlite) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	if path == nil {
 		log.Info( fmt.Sprintf("%v %v %v ",r.RemoteAddr, r.URL.Path, time.Since(start)) )
 		self.RequestErrorHandler(w, r)
-		//http.NotFound(w, r)
 		return
 	}
 

@@ -2,13 +2,19 @@ package maptiles
 
 import (
 	"fmt"
-	// "github.com/sjsafranek/go-mapnik/mapnik"
-	// "../mapnik"
-	"tileserver/mapnik"
 	"io/ioutil"
-	"log"
 	"os"
+	
+	"tileserver/mapnik"
+	"tileserver/ligneous"
+	log "github.com/cihub/seelog"
 )
+
+
+func init() {
+	logger, _ := ligneous.InitLogger()
+	log.UseLogger(logger)
+}
 
 type Generator struct {
 	MapFile string
@@ -28,7 +34,7 @@ func (g *Generator) Run(lowLeft, upRight mapnik.Coord, minZ, maxZ uint64, name s
 	c := make(chan TileCoord)
 	q := make(chan bool)
 
-	log.Println("starting job", name)
+	log.Debug("starting job", name)
 
 	ensureDirExists(g.TileDir)
 

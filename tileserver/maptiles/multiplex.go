@@ -1,8 +1,14 @@
 package maptiles
 
 import (
-	"log"
+	"tileserver/ligneous"
+	log "github.com/cihub/seelog"
 )
+
+func init() {
+	logger, _ := ligneous.InitLogger()
+	log.UseLogger(logger)
+}
 
 type LayerMultiplex struct {
 	layerChans map[string]chan<- TileFetchRequest
@@ -14,6 +20,7 @@ func NewLayerMultiplex() *LayerMultiplex {
 	return &l
 }
 
+/*
 func DefaultRenderMultiplex(defaultStylesheet string) *LayerMultiplex {
 	l := NewLayerMultiplex()
 	c := NewTileRendererChan(defaultStylesheet)
@@ -21,6 +28,7 @@ func DefaultRenderMultiplex(defaultStylesheet string) *LayerMultiplex {
 	l.layerChans["default"] = c
 	return l
 }
+*/
 
 func (l *LayerMultiplex) AddRenderer(name string, stylesheet string) {
 	l.layerChans[name] = NewTileRendererChan(stylesheet)
@@ -35,7 +43,7 @@ func (l LayerMultiplex) SubmitRequest(r TileFetchRequest) bool {
 	if ok {
 		c <- r
 	} else {
-		log.Println("No such layer", r.Coord.Layer)
+		log.Warn("No such layer ", r.Coord.Layer)
 	}
 	return ok
 }

@@ -137,6 +137,9 @@ func (t *TileRenderer) RenderTileZXY(zoom, x, y uint64) ([]byte, error) {
 	t.m.SetBufferSize(128)  
 
 	blob, err := t.m.RenderToMemoryPng()
+	
+	log.Debug( fmt.Sprintf("RENDER BLOB %v %v %v", zoom, x, y) )
+	
 	return blob, err
 }
 
@@ -156,7 +159,7 @@ func (t *TileRenderer) HttpGetTileZXY(zoom, x, y uint64) ([]byte, error) {
 	blob, err := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
 	
-	log.Debug( fmt.Sprintf("GET %v %v", tileUrl, resp.StatusCode) )
+	log.Debug( fmt.Sprintf("PROXY GET %v %v", tileUrl, resp.StatusCode) )
 	
 	if 200 != resp.StatusCode {
 		err := errors.New("Request error: "+ string(blob))
