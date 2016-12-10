@@ -7,5 +7,5 @@
 		"osmORIGINAL": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
 		"osm": "http://tile.openstreetmap.org/{z}/{x}/{y}.png"
     },
-    "port": 5001
+    "port": 5002
 }
