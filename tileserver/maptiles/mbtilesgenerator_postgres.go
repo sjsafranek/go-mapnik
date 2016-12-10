@@ -3,7 +3,14 @@ package maptiles
 import (
 	"database/sql"
 	_ "github.com/lib/pq"
+	"tileserver/ligneous"
+	log "github.com/cihub/seelog"
 )
+
+func init() {
+	logger, _ := ligneous.InitLogger()
+	log.UseLogger(logger)
+}
 
 // MBTiles 1.2-compatible Tile Db with multi-layer support.
 // Was named Mbtiles before, hence the use of *m in methods.
@@ -21,7 +28,7 @@ func NewTileDbPostgresql(path string) *TileDbPostgresql {
 	m.db, err = sql.Open("postgres", path)
 	if err != nil {
 		// logger.Println("Error opening db", err.Error())
-		logger.Fatal(err)
+		log.Error(err)
 		return nil
 	}
 	queries := []string{
@@ -42,8 +49,8 @@ func NewTileDbPostgresql(path string) *TileDbPostgresql {
 	for _, query := range queries {
 		_, err = m.db.Exec(query)
 		if err != nil {
-			logger.Println("Error setting up db", err.Error())
-			logger.Println(query, "\n");
+			log.Error("Error setting up db", err.Error())
+			log.Debug(query, "\n");
 			return nil
 		}
 	}
@@ -60,18 +67,18 @@ func (self *TileDbPostgresql) readLayers() {
 	self.layerIds = make(map[string]int)
 	rows, err := self.db.Query("SELECT rowid, layer_name FROM layers")
 	if err != nil {
-		logger.Fatal("Error fetching layer definitions", err.Error())
+		log.Error("Error fetching layer definitions", err.Error())
 	}
 	var s string
 	var i int
 	for rows.Next() {
 		if err := rows.Scan(&i, &s); err != nil {
-			logger.Fatal(err)
+			log.Error(err)
 		}
 		self.layerIds[s] = i
 	}
 	if err := rows.Err(); err != nil {
-		logger.Fatal(err)
+		log.Error(err)
 	}
 }
 
@@ -80,7 +87,7 @@ func (self *TileDbPostgresql) ensureLayer(layer string) {
 		// queryString := "INSERT OR IGNORE INTO layers(layer_name) VALUES($1)"
 		queryString := "INSERT INTO layers(layer_name) VALUES($1)"
 		if _, err := self.db.Exec(queryString, layer); err != nil {
-			logger.Println(err)
+			log.Debug(err)
 		}
 		self.readLayers()
 	}
@@ -93,7 +100,7 @@ func (self *TileDbPostgresql) Close() {
 		<-self.qc // block until channel qc is closed (meaning Run() is finished)
 	}
 	if err := self.db.Close(); err != nil {
-		logger.Print(err)
+		log.Error(err)
 	}
 
 }
@@ -123,9 +130,9 @@ func (self *TileDbPostgresql) Run() {
 func (self *TileDbPostgresql) insert(i TileFetchResult) {
 	i.Coord.setTMS(true)
 	x, y, zoom, l := i.Coord.X, i.Coord.Y, i.Coord.Zoom, i.Coord.Layer
-	if l == "" {
-		l = "default"
-	}
+	//if l == "" {
+	//	l = "default"
+	//}
 	queryString := "SELECT tile_data FROM tiles WHERE layer_id=$1 AND zoom_level=$2 AND tile_column=$3 AND tile_row=$4"
 	row := self.db.QueryRow(queryString, self.layerIds[l], zoom, x, y)
 	var dummy uint64
@@ -134,29 +141,30 @@ func (self *TileDbPostgresql) insert(i TileFetchResult) {
 	case err == sql.ErrNoRows:
 		queryString = "UPDATE tiles SET tile_data=$1 WHERE layer_id=$2 AND zoom_level=$3 AND tile_column=$4 AND tile_row=$5"
 		if _, err = self.db.Exec(queryString, i.BlobPNG, self.layerIds[l], zoom, x, y); err != nil {
-			logger.Println("error during insert", err)
+			log.Error("error during insert", err)
 			return
 		}
+		log.Trace("Insert blob", self.layerIds[l], zoom, x, y)
 	case err != nil:
-		logger.Println("error during test", err)
+		log.Error("error during test", err)
 		return
 	default:
-		logger.Println("Reusing blob", self.layerIds[l], zoom, x, y)
+		log.Trace("Insert blob", self.layerIds[l], zoom, x, y)
 	}
 	self.ensureLayer(l)
 	// queryString = "REPLACE INTO tiles VALUES($1, $2, $3, $4, $5)"
 	queryString = "INSERT INTO tiles VALUES($1, $2, $3, $4, $5)"
 	if _, err = self.db.Exec(queryString, self.layerIds[l], zoom, x, y, i.BlobPNG); err != nil {
-		logger.Println(err)
+		log.Error(err)
 	}
 }
 
 func (self *TileDbPostgresql) fetch(r TileFetchRequest) {
 	r.Coord.setTMS(true)
 	zoom, x, y, l := r.Coord.Zoom, r.Coord.X, r.Coord.Y, r.Coord.Layer
-	if l == "" {
-		l = "default"
-	}
+	//if l == "" {
+	//	l = "default"
+	//}
 	result := TileFetchResult{r.Coord, nil}
 	queryString := `
 		SELECT tile_data 
@@ -173,9 +181,10 @@ func (self *TileDbPostgresql) fetch(r TileFetchRequest) {
 	case err == sql.ErrNoRows:
 		result.BlobPNG = nil
 	case err != nil:
-		logger.Println(err)
+		log.Error(err)
 	default:
 		result.BlobPNG = blob
+		log.Trace("Reusing blob ", self.layerIds[l], zoom, x, y)
 	}
 	r.OutChan <- result
 }
