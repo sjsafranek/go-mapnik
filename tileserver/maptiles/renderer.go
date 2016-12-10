@@ -138,7 +138,7 @@ func (t *TileRenderer) RenderTileZXY(zoom, x, y uint64) ([]byte, error) {
 
 	blob, err := t.m.RenderToMemoryPng()
 	
-	log.Debug( fmt.Sprintf("RENDER BLOB %v %v %v", zoom, x, y) )
+	log.Debug( fmt.Sprintf("RENDER BLOB %v %v %v %v", t.s zoom, x, y) )
 	
 	return blob, err
 }
