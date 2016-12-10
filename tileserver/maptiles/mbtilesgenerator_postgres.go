@@ -130,9 +130,6 @@ func (self *TileDbPostgresql) Run() {
 func (self *TileDbPostgresql) insert(i TileFetchResult) {
 	i.Coord.setTMS(true)
 	x, y, zoom, l := i.Coord.X, i.Coord.Y, i.Coord.Zoom, i.Coord.Layer
-	//if l == "" {
-	//	l = "default"
-	//}
 	queryString := "SELECT tile_data FROM tiles WHERE layer_id=$1 AND zoom_level=$2 AND tile_column=$3 AND tile_row=$4"
 	row := self.db.QueryRow(queryString, self.layerIds[l], zoom, x, y)
 	var dummy uint64
@@ -162,9 +159,6 @@ func (self *TileDbPostgresql) insert(i TileFetchResult) {
 func (self *TileDbPostgresql) fetch(r TileFetchRequest) {
 	r.Coord.setTMS(true)
 	zoom, x, y, l := r.Coord.Zoom, r.Coord.X, r.Coord.Y, r.Coord.Layer
-	//if l == "" {
-	//	l = "default"
-	//}
 	result := TileFetchResult{r.Coord, nil}
 	queryString := `
 		SELECT tile_data 

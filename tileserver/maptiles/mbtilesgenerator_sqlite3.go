@@ -127,9 +127,6 @@ func (self *TileDbSqlite3) Run() {
 func (self *TileDbSqlite3) insert(i TileFetchResult) {	
 	i.Coord.setTMS(true)
 	x, y, zoom, l := i.Coord.X, i.Coord.Y, i.Coord.Zoom, i.Coord.Layer
-	//if l == "" {
-	//	l = "default"
-	//}
 	queryString := "SELECT tile_data FROM tiles WHERE layer_id=? AND zoom_level=? AND tile_column=? AND tile_row=?"
 	row := self.db.QueryRow(queryString, self.layerIds[l], zoom, x, y)
 	var dummy uint64
@@ -158,9 +155,6 @@ func (self *TileDbSqlite3) insert(i TileFetchResult) {
 func (self *TileDbSqlite3) fetch(r TileFetchRequest) {
 	r.Coord.setTMS(true)
 	zoom, x, y, l := r.Coord.Zoom, r.Coord.X, r.Coord.Y, r.Coord.Layer
-	//if l == "" {
-	//	l = "default"
-	//}
 	result := TileFetchResult{r.Coord, nil}
 	queryString := `
 		SELECT tile_data 
