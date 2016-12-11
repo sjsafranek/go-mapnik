@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"flag"
-	//"log"
 	"os"
 	"io/ioutil"
 	"encoding/json"
@@ -12,7 +11,6 @@ import (
 	"tileserver/maptiles"
 	"tileserver/ligneous"
 	
-	//seelog "github.com/cihub/seelog"
 	log "github.com/cihub/seelog"
 )
 
@@ -128,3 +126,5 @@ func main() {
 	TileserverWithCaching(config.Engine, config.Layers)
 }
 
+// sudo su mapnik
+// psql -d mbtiles -U mapnik -W
