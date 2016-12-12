@@ -37,12 +37,12 @@ func NewTileServerSqliteMux(cacheFile string) *TileServerSqliteMux {
 	t.startTime = time.Now()
 
 	t.Router = mux.NewRouter()
-	t.Router.HandleFunc("/", t.IndexHandler)
-	t.Router.HandleFunc("/ping", t.PingHandler)
-	t.Router.HandleFunc("/server", t.ServerHandler)
-	t.Router.HandleFunc("/metadata", t.MetadataHandler)
-	t.Router.HandleFunc("/tilelayers", t.TileLayersHandler)
-	t.Router.HandleFunc("/{lyr}/{z:[0-9]+}/{x:[0-9]+}/{y:[0-9]+}.png", t.ServeTileRequest)
+	t.Router.HandleFunc("/", t.IndexHandler).Methods("GET")
+	t.Router.HandleFunc("/ping", t.PingHandler).Methods("GET")
+	t.Router.HandleFunc("/server", t.ServerHandler).Methods("GET")
+	t.Router.HandleFunc("/metadata", t.MetadataHandler).Methods("GET")
+	t.Router.HandleFunc("/tilelayers", t.TileLayersHandler).Methods("GET")
+	t.Router.HandleFunc("/{lyr}/{z:[0-9]+}/{x:[0-9]+}/{y:[0-9]+}.png", t.ServeTileRequest).Methods("GET")
 
 	return &t
 }
@@ -103,6 +103,7 @@ func (self *TileServerSqliteMux) ServeTileRequest(w http.ResponseWriter, r *http
 }
 
 func (self *TileServerSqliteMux) RequestErrorHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	response := make(map[string]interface{})
@@ -116,9 +117,11 @@ func (self *TileServerSqliteMux) RequestErrorHandler(w http.ResponseWriter, r *h
 		return
 	}
 	w.Write(js)
+	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 func (self *TileServerSqliteMux) IndexHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	response := make(map[string]interface{})
@@ -132,10 +135,11 @@ func (self *TileServerSqliteMux) IndexHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 	w.Write(js)
+	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 func (self *TileServerSqliteMux) MetadataHandler(w http.ResponseWriter, r *http.Request) {
-	// todo: include layer
+	start := time.Now()
 	metadata := self.m.MetaDataHandler()
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -148,10 +152,12 @@ func (self *TileServerSqliteMux) MetadataHandler(w http.ResponseWriter, r *http.
 		return
 	}
 	w.Write(js)
+	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 // PingHandler provides an api route for server health check
 func (self *TileServerSqliteMux) PingHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	response := make(map[string]interface{})
@@ -165,10 +171,12 @@ func (self *TileServerSqliteMux) PingHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	w.Write(js)
+	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 // ServerProfile returns basic server stats
 func (self *TileServerSqliteMux) ServerHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var data map[string]interface{}
@@ -186,9 +194,11 @@ func (self *TileServerSqliteMux) ServerHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 	w.Write(js)
+	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 func (self *TileServerSqliteMux) TileLayersHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var keys []string
@@ -205,4 +215,5 @@ func (self *TileServerSqliteMux) TileLayersHandler(w http.ResponseWriter, r *htt
 		return
 	}
 	w.Write(js)
+	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
