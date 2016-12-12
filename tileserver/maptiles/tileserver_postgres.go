@@ -66,6 +66,7 @@ func (self *TileServerPostgres) ServeTileRequest(w http.ResponseWriter, r *http.
 	}
 
 	w.Header().Set("Content-Type", "image/png")
+	w.WriteHeader(http.StatusOK)
 	_, err := w.Write(result.BlobPNG)
 	if err != nil {
 		log.Error(err)

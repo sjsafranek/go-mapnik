@@ -15,6 +15,10 @@ import (
 	log "github.com/cihub/seelog"
 )
 
+var ProxyClient = &http.Client{
+	Timeout: time.Second * 30,
+}
+
 func init() {
 	logger, _ := ligneous.InitLogger()
 	log.UseLogger(logger)
@@ -152,7 +156,60 @@ func (t *TileRenderer) HttpGetTileZXY(zoom, x, y uint64) ([]byte, error) {
 	tileUrl = strings.Replace(tileUrl, "{y}", fmt.Sprintf("%v", y), -1)
 	tileUrl = strings.Replace(tileUrl, "{s}", t.subDomain(), -1)
 
-	resp, err := http.Get(tileUrl)
+	// Retry attempts -- 5
+	attempt := 0
+	for {
+		resp, err := ProxyClient.Get(tileUrl)
+		if nil == err {
+
+			blob, err := ioutil.ReadAll(resp.Body)
+			defer resp.Body.Close()
+			if nil != err {
+				return []byte{}, err
+			}
+
+			log.Trace(fmt.Sprintf("PROXY GET %v %v", tileUrl, resp.StatusCode))
+
+			if 200 != resp.StatusCode {
+				err := errors.New("Request error: " + string(blob))
+				return []byte{}, err
+			}
+
+			return blob, err
+		}
+
+		attempt++
+		if attempt > 4 {
+			return []byte{}, err
+		}
+	}
+
+	// blob, err := ioutil.ReadAll(resp.Body)
+	// resp.Body.Close()
+	// if nil != err {
+	// 	return []byte{}, err
+	// }
+
+	// log.Trace(fmt.Sprintf("PROXY GET %v %v", tileUrl, resp.StatusCode))
+
+	// if 200 != resp.StatusCode {
+	// 	err := errors.New("Request error: " + string(blob))
+	// 	return []byte{}, err
+	// }
+
+	// return blob, err
+}
+
+/*
+func (t *TileRenderer) HttpGetTileZXY(zoom, x, y uint64) ([]byte, error) {
+	tileUrl := strings.Replace(t.s, "{z}", fmt.Sprintf("%v", zoom), -1)
+	tileUrl = strings.Replace(tileUrl, "{x}", fmt.Sprintf("%v", x), -1)
+	tileUrl = strings.Replace(tileUrl, "{y}", fmt.Sprintf("%v", y), -1)
+	tileUrl = strings.Replace(tileUrl, "{s}", t.subDomain(), -1)
+
+	// resp, err := http.Get(tileUrl)
+
+	resp, err := ProxyClient.Get(tileUrl)
 	if nil != err {
 		return []byte{}, err
 	}
@@ -172,3 +229,7 @@ func (t *TileRenderer) HttpGetTileZXY(zoom, x, y uint64) ([]byte, error) {
 
 	return blob, err
 }
+*/
+
+//func (t *TileRenderer) HttpGetTile(url string) ([]byte, error) {/
+//(resp *http.Response, err error)
