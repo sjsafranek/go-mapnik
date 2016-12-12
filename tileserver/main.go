@@ -56,6 +56,7 @@ func TileserverWithCaching(engine string, layer_config map[string]string) {
 			WriteTimeout: 10 * time.Second,
 		}
 		log.Error(srv.ListenAndServe())
+		//log.Error(http.ListenAndServe(bind, t))
 	} else {
 		t := maptiles.NewTileServerSqlite(config.Cache)
 		for i := range layer_config {
