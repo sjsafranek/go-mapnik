@@ -43,6 +43,11 @@ if [ ! -d "`pwd`/src/github.com/cihub/seelog" ]; then
     go get github.com/cihub/seelog
 fi
 
+if [ ! -d "`pwd`/src/github.com/gorilla/mux" ]; then
+    echo "downloading seelog..."
+    go get github.com/gorilla/mux
+fi
+
 
 # sudo apt-get install libmapnik-dev
 # cd mapnik/

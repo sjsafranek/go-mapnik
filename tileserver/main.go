@@ -34,11 +34,6 @@ var (
 	//logger seelog.LoggerInterface
 )
 
-// func changeState(conn net.Conn, state http.ConnState) {
-// 	log.Info(conn)
-// 	log.Info(state)
-// }
-
 // Serve a single stylesheet via HTTP. Open view_tileserver.html in your browser
 // to see the results.
 // The created tiles are cached in an sqlite database (MBTiles 1.2 conform) so
@@ -62,23 +57,41 @@ func TileserverWithCaching(engine string, layer_config map[string]string) {
 		log.Error(srv.ListenAndServe())
 		//log.Error(http.ListenAndServe(bind, t))
 	} else {
-		t := maptiles.NewTileServerSqlite(config.Cache)
+		t := maptiles.NewTileServerSqliteMux(config.Cache)
 		for i := range layer_config {
 			t.AddMapnikLayer(i, layer_config[i])
 		}
 		log.Info("Connecting to sqlite3 database:")
 		log.Info("*** ", config.Cache)
 		log.Info(fmt.Sprintf("Magic happens on port %v...", config.Port))
-		// srv := &http.Server{
-		// 	Addr:    bind,
-		// 	Handler: t,
-		// 	ReadTimeout:  5 * time.Second,
-		// 	WriteTimeout: 10 * time.Second,
-		// 	// ConnState:    changeState,
-		// }
-		// log.Error(srv.ListenAndServe())
-		log.Error(http.ListenAndServe(bind, t))
+		srv := &http.Server{
+			Addr:         bind,
+			Handler:      t.Router,
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 10 * time.Second,
+		}
+		log.Error(srv.ListenAndServe())
+		//log.Error(http.ListenAndServe(bind, t.Mux))
 	}
+	/*
+		else {
+			t := maptiles.NewTileServerSqlite(config.Cache)
+			for i := range layer_config {
+				t.AddMapnikLayer(i, layer_config[i])
+			}
+			log.Info("Connecting to sqlite3 database:")
+			log.Info("*** ", config.Cache)
+			log.Info(fmt.Sprintf("Magic happens on port %v...", config.Port))
+			srv := &http.Server{
+				Addr:         bind,
+				Handler:      t,
+				ReadTimeout:  5 * time.Second,
+				WriteTimeout: 10 * time.Second,
+			}
+			log.Error(srv.ListenAndServe())
+			//log.Error(http.ListenAndServe(bind, t.Mux))
+		}
+	*/
 }
 
 func init() {
