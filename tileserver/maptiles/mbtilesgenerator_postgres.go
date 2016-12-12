@@ -2,9 +2,9 @@ package maptiles
 
 import (
 	"database/sql"
+	log "github.com/cihub/seelog"
 	_ "github.com/lib/pq"
 	"tileserver/ligneous"
-	log "github.com/cihub/seelog"
 )
 
 func init() {
@@ -50,7 +50,7 @@ func NewTileDbPostgresql(path string) *TileDbPostgresql {
 		_, err = m.db.Exec(query)
 		if err != nil {
 			log.Error("Error setting up db", err.Error())
-			log.Debug(query, "\n");
+			log.Debug(query, "\n")
 			return nil
 		}
 	}
@@ -186,7 +186,7 @@ func (self *TileDbPostgresql) fetch(r TileFetchRequest) {
 // gets tile data
 func (self *TileDbPostgresql) MetaDataHandler() map[string]string {
 	rows, _ := self.db.Query("SELECT * FROM metadata")
-	metadata :=  make(map[string]string)
+	metadata := make(map[string]string)
 	for rows.Next() {
 		var name string
 		var value string

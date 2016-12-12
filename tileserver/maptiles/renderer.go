@@ -1,32 +1,29 @@
 package maptiles
 
 import (
-	"fmt"
-	"strings"
-	"io/ioutil"
-	"net/http"
 	"errors"
-	"time"
+	"fmt"
+	"io/ioutil"
 	"math/rand"
+	"net/http"
+	"strings"
+	"time"
 
-	"tileserver/mapnik"
 	"tileserver/ligneous"
-	
+	"tileserver/mapnik"
+
 	log "github.com/cihub/seelog"
 )
-
 
 func init() {
 	logger, _ := ligneous.InitLogger()
 	log.UseLogger(logger)
 }
 
-
 func randomNum(min, max int) int {
-    rand.Seed(time.Now().Unix())
-    return rand.Intn(max - min) + min
+	rand.Seed(time.Now().Unix())
+	return rand.Intn(max-min) + min
 }
-
 
 type TileCoord struct {
 	X, Y, Zoom uint64
@@ -77,10 +74,10 @@ func NewTileRendererChan(stylesheet string) chan<- TileFetchRequest {
 
 // Renders images as Web Mercator tiles
 type TileRenderer struct {
-	m  *mapnik.Map
-	mp mapnik.Projection
+	m     *mapnik.Map
+	mp    mapnik.Projection
 	proxy bool
-	s string
+	s     string
 }
 
 func NewTileRenderer(stylesheet string) *TileRenderer {
@@ -131,38 +128,45 @@ func (t *TileRenderer) RenderTileZXY(zoom, x, y uint64) ([]byte, error) {
 	c0 := t.mp.Forward(mapnik.Coord{l0[0], l0[1]})
 	c1 := t.mp.Forward(mapnik.Coord{l1[0], l1[1]})
 
-	// Bounding box for the Tile  
+	// Bounding box for the Tile
 	t.m.Resize(256, 256)
 	t.m.ZoomToMinMax(c0.X, c0.Y, c1.X, c1.Y)
-	t.m.SetBufferSize(128)  
+	t.m.SetBufferSize(128)
 
 	blob, err := t.m.RenderToMemoryPng()
-	
-	log.Debug( fmt.Sprintf("RENDER BLOB %v %v %v %v", t.s, zoom, x, y) )
-	
+
+	log.Trace(fmt.Sprintf("RENDER BLOB %v %v %v %v", t.s, zoom, x, y))
+
 	return blob, err
 }
 
 func (t *TileRenderer) subDomain() string {
-	subs := []string{"a","b","c"}
-	n := randomNum(0,3);
+	subs := []string{"a", "b", "c"}
+	n := randomNum(0, 3)
 	return subs[n]
-} 
+}
 
 func (t *TileRenderer) HttpGetTileZXY(zoom, x, y uint64) ([]byte, error) {
-	tileUrl := strings.Replace(t.s, "{z}", fmt.Sprintf("%v", zoom), -1);
-	tileUrl = strings.Replace(tileUrl, "{x}", fmt.Sprintf("%v", x), -1);
-	tileUrl = strings.Replace(tileUrl, "{y}", fmt.Sprintf("%v", y), -1);
-	tileUrl = strings.Replace(tileUrl, "{s}", t.subDomain(), -1);
-	
+	tileUrl := strings.Replace(t.s, "{z}", fmt.Sprintf("%v", zoom), -1)
+	tileUrl = strings.Replace(tileUrl, "{x}", fmt.Sprintf("%v", x), -1)
+	tileUrl = strings.Replace(tileUrl, "{y}", fmt.Sprintf("%v", y), -1)
+	tileUrl = strings.Replace(tileUrl, "{s}", t.subDomain(), -1)
+
 	resp, err := http.Get(tileUrl)
+	if nil != err {
+		return []byte{}, err
+	}
+
 	blob, err := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
-	
-	log.Debug( fmt.Sprintf("PROXY GET %v %v", tileUrl, resp.StatusCode) )
-	
+	if nil != err {
+		return []byte{}, err
+	}
+
+	log.Trace(fmt.Sprintf("PROXY GET %v %v", tileUrl, resp.StatusCode))
+
 	if 200 != resp.StatusCode {
-		err := errors.New("Request error: "+ string(blob))
+		err := errors.New("Request error: " + string(blob))
 		return []byte{}, err
 	}
 

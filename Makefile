@@ -16,6 +16,7 @@ install: fmt
 
 fmt:
 	@GOPATH=${GPATH} gofmt -s -w src/${PROJECT_NAME}
+	@GOPATH=${GPATH} gofmt -s -w ${PROJECT_NAME}
 
 get:
 	@GOPATH=${GPATH} go get ${OPTS} ${ARGS}
