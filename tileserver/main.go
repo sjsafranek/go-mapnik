@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	// "net"
 	"net/http"
 	"os"
 	"time"
@@ -71,7 +70,7 @@ func TileserverWithCaching(engine string, layer_config map[string]string) {
 			WriteTimeout: 10 * time.Second,
 		}
 		log.Error(srv.ListenAndServe())
-		//log.Error(http.ListenAndServe(bind, t.Mux))
+		//log.Error(http.ListenAndServe(bind, t.Router))
 	}
 	/*
 		else {
