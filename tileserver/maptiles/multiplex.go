@@ -1,8 +1,8 @@
 package maptiles
 
 import (
-	"tileserver/ligneous"
 	log "github.com/cihub/seelog"
+	"tileserver/ligneous"
 )
 
 func init() {

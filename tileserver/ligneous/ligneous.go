@@ -8,8 +8,9 @@ import (
 // https://github.com/cihub/seelog/wiki/Log-levels
 
 var (
-	LogDirectory  string = "log"
-	LogLevel      string = "trace"
+	LogDirectory string = "log"
+	//LogLevel      string = "trace"
+	LogLevel string = "debug"
 )
 
 func InitLogger() (seelog.LoggerInterface, error) {
@@ -40,7 +41,6 @@ func InitLogger() (seelog.LoggerInterface, error) {
 
 	return logger, nil
 }
-
 
 /*
 func DisableLog() {

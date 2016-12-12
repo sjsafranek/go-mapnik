@@ -1,16 +1,16 @@
 package maptiles
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"regexp"
-	"strconv"
-	"encoding/json"
-	"time"
 	"runtime"
+	"strconv"
+	"time"
 
-	"tileserver/ligneous"
 	log "github.com/cihub/seelog"
+	"tileserver/ligneous"
 )
 
 func init() {
@@ -23,7 +23,7 @@ func init() {
 // Handles HTTP requests for map tiles, caching any produced tiles
 // in an MBtiles 1.2 compatible sqlite db.
 type TileServerSqlite struct {
-	engine string
+	engine    string
 	m         *TileDbSqlite3
 	lmp       *LayerMultiplex
 	TmsSchema bool
@@ -75,27 +75,27 @@ func (self *TileServerSqlite) ServeTileRequest(w http.ResponseWriter, r *http.Re
 }
 
 func (self *TileServerSqlite) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	
+
 	start := time.Now()
 
 	if "/" == r.URL.Path {
-		log.Info( fmt.Sprintf("%v %v %v ",r.RemoteAddr, r.URL.Path, time.Since(start)) )
+		log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 		self.IndexHandler(w, r)
 		return
 	} else if "/ping" == r.URL.Path {
-		log.Info( fmt.Sprintf("%v %v %v ",r.RemoteAddr, r.URL.Path, time.Since(start)) )
+		log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 		self.PingHandler(w, r)
 		return
 	} else if "/server" == r.URL.Path {
-		log.Info( fmt.Sprintf("%v %v %v ",r.RemoteAddr, r.URL.Path, time.Since(start)) )
+		log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 		self.ServerHandler(w, r)
 		return
 	} else if "/metadata" == r.URL.Path {
-		log.Info( fmt.Sprintf("%v %v %v ",r.RemoteAddr, r.URL.Path, time.Since(start)) )
+		log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 		self.MetadataHandler(w, r)
 		return
 	} else if "/tilelayers" == r.URL.Path {
-		log.Info( fmt.Sprintf("%v %v %v ",r.RemoteAddr, r.URL.Path, time.Since(start)) )
+		log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 		self.TileLayersHandler(w, r)
 		return
 	}
@@ -104,7 +104,7 @@ func (self *TileServerSqlite) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	path := pathRegex.FindStringSubmatch(r.URL.Path)
 
 	if path == nil {
-		log.Info( fmt.Sprintf("%v %v %v ",r.RemoteAddr, r.URL.Path, time.Since(start)) )
+		log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 		self.RequestErrorHandler(w, r)
 		return
 	}
@@ -115,8 +115,8 @@ func (self *TileServerSqlite) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	y, _ := strconv.ParseUint(path[4], 10, 64)
 
 	self.ServeTileRequest(w, r, TileCoord{x, y, z, self.TmsSchema, l})
-	
-	log.Info( fmt.Sprintf("%v %v %v ",r.RemoteAddr, r.URL.Path, time.Since(start)) )
+
+	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 func (self *TileServerSqlite) RequestErrorHandler(w http.ResponseWriter, r *http.Request) {
@@ -167,8 +167,6 @@ func (self *TileServerSqlite) MetadataHandler(w http.ResponseWriter, r *http.Req
 	w.Write(js)
 }
 
-
-
 // PingHandler provides an api route for server health check
 func (self *TileServerSqlite) PingHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -207,13 +205,12 @@ func (self *TileServerSqlite) ServerHandler(w http.ResponseWriter, r *http.Reque
 	w.Write(js)
 }
 
-
 func (self *TileServerSqlite) TileLayersHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var keys []string
 	for k := range self.lmp.layerChans {
-		keys = append(keys,k)
+		keys = append(keys, k)
 	}
 	var response map[string]interface{}
 	response = make(map[string]interface{})
@@ -226,4 +223,3 @@ func (self *TileServerSqlite) TileLayersHandler(w http.ResponseWriter, r *http.R
 	}
 	w.Write(js)
 }
-

@@ -2,9 +2,9 @@ package maptiles
 
 import (
 	"database/sql"
+	log "github.com/cihub/seelog"
 	_ "github.com/mattn/go-sqlite3"
 	"tileserver/ligneous"
-	log "github.com/cihub/seelog"
 )
 
 func init() {
@@ -49,7 +49,7 @@ func NewTileDbSqlite(path string) *TileDbSqlite3 {
 		_, err = m.db.Exec(query)
 		if err != nil {
 			log.Error("Error setting up db", err.Error())
-			log.Debug(query, "\n");
+			log.Debug(query, "\n")
 			return nil
 		}
 	}
@@ -124,7 +124,7 @@ func (self *TileDbSqlite3) Run() {
 	self.qc <- true
 }
 
-func (self *TileDbSqlite3) insert(i TileFetchResult) {	
+func (self *TileDbSqlite3) insert(i TileFetchResult) {
 	i.Coord.setTMS(true)
 	x, y, zoom, l := i.Coord.X, i.Coord.Y, i.Coord.Zoom, i.Coord.Layer
 	queryString := "SELECT tile_data FROM tiles WHERE layer_id=? AND zoom_level=? AND tile_column=? AND tile_row=?"
@@ -182,7 +182,7 @@ func (self *TileDbSqlite3) fetch(r TileFetchRequest) {
 // gets tile data
 func (self *TileDbSqlite3) MetaDataHandler() map[string]string {
 	rows, _ := self.db.Query("SELECT * FROM metadata")
-	metadata :=  make(map[string]string)
+	metadata := make(map[string]string)
 	for rows.Next() {
 		var name string
 		var value string

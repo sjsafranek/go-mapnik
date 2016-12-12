@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	
-	"tileserver/mapnik"
-	"tileserver/ligneous"
-	log "github.com/cihub/seelog"
-)
 
+	log "github.com/cihub/seelog"
+	"tileserver/ligneous"
+	"tileserver/mapnik"
+)
 
 func init() {
 	logger, _ := ligneous.InitLogger()

@@ -1,24 +1,25 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
-	"flag"
-	"os"
-	"io/ioutil"
 	"encoding/json"
+	"flag"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"time"
 
-	"tileserver/maptiles"
 	"tileserver/ligneous"
-	
+	"tileserver/maptiles"
+
 	log "github.com/cihub/seelog"
 )
 
 type Config struct {
-	Cache string `json:"cache"`
-	Engine string `json:"engine"`
+	Cache  string            `json:"cache"`
+	Engine string            `json:"engine"`
 	Layers map[string]string `json:"layers"`
-	Port int `json:"port"`
+	Port   int               `json:"port"`
 }
 
 var (
@@ -26,14 +27,13 @@ var (
 	// engine string
 	// port string
 	// db_cache string
-	config_file string
+	config_file   string
 	print_version bool
-	version string = "0.1.0" 
+	version       string = "0.1.0"
 	//logger seelog.LoggerInterface
 )
 
 //var logger *log.Logger = log.New(os.Stdout, "[TileServer] ", log.LUTC|log.Ldate|log.Ltime|log.Lshortfile|log.Lmicroseconds)
-
 
 // Serve a single stylesheet via HTTP. Open view_tileserver.html in your browser
 // to see the results.
@@ -47,20 +47,32 @@ func TileserverWithCaching(engine string, layer_config map[string]string) {
 			t.AddMapnikLayer(i, layer_config[i])
 		}
 		log.Info("Connecting to postgres database:")
-		log.Info("***", config.Cache)
-		log.Info("Magic happens on port %v...", config.Port)
-		log.Error(http.ListenAndServe(bind, t))
+		log.Info("*** ", config.Cache)
+		log.Info(fmt.Sprintf("Magic happens on port %v...", config.Port))
+		srv := &http.Server{
+			Addr:         bind,
+			Handler:      t,
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 10 * time.Second,
+		}
+		log.Error(srv.ListenAndServe())
 	} else {
 		t := maptiles.NewTileServerSqlite(config.Cache)
 		for i := range layer_config {
 			t.AddMapnikLayer(i, layer_config[i])
 		}
 		log.Info("Connecting to sqlite3 database:")
-		log.Info("***", config.Cache)
-		log.Info("Magic happens on port %v...", config.Port)
-		log.Error(http.ListenAndServe(bind, t))
+		log.Info("*** ", config.Cache)
+		log.Info(fmt.Sprintf("Magic happens on port %v...", config.Port))
+		srv := &http.Server{
+			Addr:         bind,
+			Handler:      t,
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 10 * time.Second,
+		}
+		log.Error(srv.ListenAndServe())
+		//log.Error(http.ListenAndServe(bind, t))
 	}
-
 }
 
 func init() {
@@ -77,10 +89,10 @@ func init() {
 	// 	}
 	// }
 	if print_version {
-		fmt.Println("TileServer",version)
+		fmt.Println("TileServer", version)
 		os.Exit(1)
 	}
-	
+
 	logger, err := ligneous.InitLogger()
 	if nil != err {
 		fmt.Println("Error starting logging")
@@ -93,7 +105,7 @@ func init() {
 func getConfig() {
 	// check if file exists!!!
 	if _, err := os.Stat(config_file); err == nil {
-		
+
 		file, err := ioutil.ReadFile(config_file)
 		if err != nil {
 			panic(err)
