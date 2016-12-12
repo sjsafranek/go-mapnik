@@ -64,7 +64,13 @@ func (self *TileServerSqlite) ServeTileRequest(w http.ResponseWriter, r *http.Re
 		needsInsert = true
 	}
 
+	// upgrade go1.7
+	//log.Info(len(r.Cancel))
+	//log.Info(r.Context())
+
 	w.Header().Set("Content-Type", "image/png")
+	w.WriteHeader(http.StatusOK)
+
 	_, err := w.Write(result.BlobPNG)
 	if err != nil {
 		log.Error(err)
@@ -72,6 +78,7 @@ func (self *TileServerSqlite) ServeTileRequest(w http.ResponseWriter, r *http.Re
 	if needsInsert {
 		self.m.InsertQueue() <- result // insert newly rendered tile into cache db
 	}
+
 }
 
 func (self *TileServerSqlite) ServeHTTP(w http.ResponseWriter, r *http.Request) {
