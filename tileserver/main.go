@@ -69,15 +69,14 @@ func TileserverWithCaching(engine string, layer_config map[string]string) {
 		log.Info("Connecting to sqlite3 database:")
 		log.Info("*** ", config.Cache)
 		log.Info(fmt.Sprintf("Magic happens on port %v...", config.Port))
-		// srv := &http.Server{
-		// 	Addr:    bind,
-		// 	Handler: t,
-		// 	ReadTimeout:  5 * time.Second,
-		// 	WriteTimeout: 10 * time.Second,
-		// 	// ConnState:    changeState,
-		// }
-		// log.Error(srv.ListenAndServe())
-		log.Error(http.ListenAndServe(bind, t))
+		srv := &http.Server{
+			Addr:         bind,
+			Handler:      t,
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 10 * time.Second,
+		}
+		log.Error(srv.ListenAndServe())
+		// log.Error(http.ListenAndServe(bind, t))
 	}
 }
 
