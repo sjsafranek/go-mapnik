@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"regexp"
 	"runtime"
 	"strconv"
 	"time"
 
 	log "github.com/cihub/seelog"
+	"github.com/gorilla/mux"
 	"tileserver/ligneous"
 )
 
@@ -20,28 +20,49 @@ func init() {
 
 // Handles HTTP requests for map tiles, caching any produced tiles
 // in an MBtiles 1.2 compatible sqlite db.
-type TileServerSqlite struct {
+type TileServerSqliteMux struct {
 	engine    string
 	m         *TileDbSqlite3
 	lmp       *LayerMultiplex
 	TmsSchema bool
 	startTime time.Time
+	Router    *mux.Router
 }
 
-func NewTileServerSqlite(cacheFile string) *TileServerSqlite {
-	t := TileServerSqlite{}
+func NewTileServerSqliteMux(cacheFile string) *TileServerSqliteMux {
+	t := TileServerSqliteMux{}
 	t.lmp = NewLayerMultiplex()
 	t.m = NewTileDbSqlite(cacheFile)
 	// t.m = NewTileDbPostgresql(cacheFile)
 	t.startTime = time.Now()
+
+	t.Router = mux.NewRouter()
+	t.Router.HandleFunc("/", t.IndexHandler).Methods("GET")
+	t.Router.HandleFunc("/ping", t.PingHandler).Methods("GET")
+	t.Router.HandleFunc("/server", t.ServerHandler).Methods("GET")
+	t.Router.HandleFunc("/metadata", t.MetadataHandler).Methods("GET")
+	t.Router.HandleFunc("/tilelayers", t.TileLayersHandler).Methods("GET")
+	t.Router.HandleFunc("/{lyr}/{z:[0-9]+}/{x:[0-9]+}/{y:[0-9]+}.png", t.ServeTileRequest).Methods("GET")
+
 	return &t
 }
 
-func (self *TileServerSqlite) AddMapnikLayer(layerName string, stylesheet string) {
+func (self *TileServerSqliteMux) AddMapnikLayer(layerName string, stylesheet string) {
 	self.lmp.AddRenderer(layerName, stylesheet)
 }
 
-func (self *TileServerSqlite) ServeTileRequest(w http.ResponseWriter, r *http.Request, tc TileCoord) {
+func (self *TileServerSqliteMux) ServeTileRequest(w http.ResponseWriter, r *http.Request) {
+
+	start := time.Now()
+
+	vars := mux.Vars(r)
+	lyr := vars["lyr"]
+	z, _ := strconv.ParseUint(vars["z"], 10, 64)
+	x, _ := strconv.ParseUint(vars["x"], 10, 64)
+	y, _ := strconv.ParseUint(vars["y"], 10, 64)
+
+	tc := TileCoord{x, y, z, self.TmsSchema, lyr}
+
 	ch := make(chan TileFetchResult)
 
 	tr := TileFetchRequest{tc, ch}
@@ -77,54 +98,12 @@ func (self *TileServerSqlite) ServeTileRequest(w http.ResponseWriter, r *http.Re
 		self.m.InsertQueue() <- result // insert newly rendered tile into cache db
 	}
 
-}
-
-func (self *TileServerSqlite) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
-	start := time.Now()
-
-	if "/" == r.URL.Path {
-		log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
-		self.IndexHandler(w, r)
-		return
-	} else if "/ping" == r.URL.Path {
-		log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
-		self.PingHandler(w, r)
-		return
-	} else if "/server" == r.URL.Path {
-		log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
-		self.ServerHandler(w, r)
-		return
-	} else if "/metadata" == r.URL.Path {
-		log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
-		self.MetadataHandler(w, r)
-		return
-	} else if "/tilelayers" == r.URL.Path {
-		log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
-		self.TileLayersHandler(w, r)
-		return
-	}
-
-	var pathRegex = regexp.MustCompile(`/([A-Za-z0-9]+)/([0-9]+)/([0-9]+)/([0-9]+)\.png`)
-	path := pathRegex.FindStringSubmatch(r.URL.Path)
-
-	if path == nil {
-		log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
-		self.RequestErrorHandler(w, r)
-		return
-	}
-
-	l := path[1]
-	z, _ := strconv.ParseUint(path[2], 10, 64)
-	x, _ := strconv.ParseUint(path[3], 10, 64)
-	y, _ := strconv.ParseUint(path[4], 10, 64)
-
-	self.ServeTileRequest(w, r, TileCoord{x, y, z, self.TmsSchema, l})
-
 	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+
 }
 
-func (self *TileServerSqlite) RequestErrorHandler(w http.ResponseWriter, r *http.Request) {
+func (self *TileServerSqliteMux) RequestErrorHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	response := make(map[string]interface{})
@@ -138,9 +117,11 @@ func (self *TileServerSqlite) RequestErrorHandler(w http.ResponseWriter, r *http
 		return
 	}
 	w.Write(js)
+	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
-func (self *TileServerSqlite) IndexHandler(w http.ResponseWriter, r *http.Request) {
+func (self *TileServerSqliteMux) IndexHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	response := make(map[string]interface{})
@@ -154,10 +135,11 @@ func (self *TileServerSqlite) IndexHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	w.Write(js)
+	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
-func (self *TileServerSqlite) MetadataHandler(w http.ResponseWriter, r *http.Request) {
-	// todo: include layer
+func (self *TileServerSqliteMux) MetadataHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	metadata := self.m.MetaDataHandler()
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -170,10 +152,12 @@ func (self *TileServerSqlite) MetadataHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 	w.Write(js)
+	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 // PingHandler provides an api route for server health check
-func (self *TileServerSqlite) PingHandler(w http.ResponseWriter, r *http.Request) {
+func (self *TileServerSqliteMux) PingHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	response := make(map[string]interface{})
@@ -187,10 +171,12 @@ func (self *TileServerSqlite) PingHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 	w.Write(js)
+	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 // ServerProfile returns basic server stats
-func (self *TileServerSqlite) ServerHandler(w http.ResponseWriter, r *http.Request) {
+func (self *TileServerSqliteMux) ServerHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var data map[string]interface{}
@@ -208,9 +194,11 @@ func (self *TileServerSqlite) ServerHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	w.Write(js)
+	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
-func (self *TileServerSqlite) TileLayersHandler(w http.ResponseWriter, r *http.Request) {
+func (self *TileServerSqliteMux) TileLayersHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var keys []string
@@ -227,4 +215,5 @@ func (self *TileServerSqlite) TileLayersHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 	w.Write(js)
+	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
