@@ -159,7 +159,15 @@ func (t *TileRenderer) HttpGetTileZXY(zoom, x, y uint64) ([]byte, error) {
 	// Retry attempts -- 5
 	attempt := 0
 	for {
-		resp, err := ProxyClient.Get(tileUrl)
+		//resp, err := ProxyClient.Get(tileUrl)
+		//.start :: tile request
+		req, err := ProxyClient.NewRequest("GET",tileUrl,nil)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		req.Header.Set("User-Agent", "Golang_TileServer/1.0")
+		resp, err := client.Do(req)
+        //.end
 		if nil == err {
 
 			blob, err := ioutil.ReadAll(resp.Body)
