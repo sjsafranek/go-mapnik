@@ -161,13 +161,16 @@ func (t *TileRenderer) HttpGetTileZXY(zoom, x, y uint64) ([]byte, error) {
 	for {
 		//resp, err := ProxyClient.Get(tileUrl)
 		//.start :: tile request
-		req, err := ProxyClient.NewRequest("GET",tileUrl,nil)
+		req, err := http.NewRequest("GET", tileUrl, nil)
 		if err != nil {
-			log.Fatalln(err)
+			log.Error(err)
 		}
-		req.Header.Set("User-Agent", "Golang_TileServer/1.0")
-		resp, err := client.Do(req)
-        //.end
+		//req.Header.Set("User-Agent", "Golang_TileServer/1.2")
+		// Look like a web browser running leaflet
+		req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36")
+		resp, err := ProxyClient.Do(req)
+		//.end
+
 		if nil == err {
 
 			blob, err := ioutil.ReadAll(resp.Body)
