@@ -38,6 +38,6 @@ pkg/
 log/
 
 # Misc
-
+.vagrant
 
 
