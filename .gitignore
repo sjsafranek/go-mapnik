@@ -31,6 +31,9 @@ TileStache
 *.sqlite3
 *.mbtiles
 
+# Archives
+*.zip
+*.tar.gz
 
 # Project directories
 bin/
@@ -42,3 +45,4 @@ log/
 .vagrant
 *.log
 *.png
+TileServer
