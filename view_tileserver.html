@@ -10,9 +10,9 @@
 		var map = L.map('map',{
 			maxZoom:20,
 			layers: [
-				L.tileLayer('http://localhost:8080/osm/{z}/{x}/{y}.png') //,
-				// L.tileLayer('http://localhost:8080/population/{z}/{x}/{y}.png')
-				// L.tileLayer('http://localhost:8080/default/{z}/{x}/{y}.png')
+				//L.tileLayer('http://localhost:8080/osm/{z}/{x}/{y}.png'),
+				L.tileLayer('http://localhost:8080/population/{z}/{x}/{y}.png')
+				//L.tileLayer('http://localhost:8080/world/{z}/{x}/{y}.png')
 				// L.tileLayer('http://localhost:8080/sample/{z}/{x}/{y}.png')
 			]
 		}).setView([0,0], 2)

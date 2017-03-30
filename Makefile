@@ -15,6 +15,7 @@ install: fmt get-deps
 	./install.sh
 	@GOPATH=${GPATH} go build -o TileServer ${PROJECT_NAME}/main.go
 	# sudo journalctl -f -u tileserver.service
+	# sudo psql -U mapnik -d mbtiles
 
 fmt:
 	@GOPATH=${GPATH} gofmt -s -w ${PROJECT_NAME}

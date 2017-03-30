@@ -70,11 +70,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 	# sudo apt-add-repository ppa:ubuntugis/ubuntugis-unstable
 	config.vm.provision "shell", inline: 'aptitude update'
 	config.vm.provision "shell", inline: 'aptitude -yy install curl'
-	config.vm.provision "shell", inline: 'curl https://getcaddy.com | bash'
+	#config.vm.provision "shell", inline: 'curl https://getcaddy.com | bash'
 	config.vm.provision "shell", inline: 'aptitude -yy install libmapnik-dev'
 	config.vm.provision "shell", inline: 'aptitude -yy install postgresql'
 	#config.vm.provision "shell", inline: 'aptitude -yy install postgis'
 	config.vm.provision "shell", inline: 'aptitude -yy install postgresql-9.4-postgis-2.1'
+	# create user
+	config.vm.provision "shell", inline: 'useradd -m mapnik'
+	config.vm.provision "shell", inline: 'echo -e "dev\ndev" | passwd mapnik'
 	config.vm.provision "shell", inline: $setup_db
 	config.vm.provision "shell", inline: $setup_systemd
 	config.vm.provision "shell", run: "always", inline: "systemctl restart tileserver.service"
