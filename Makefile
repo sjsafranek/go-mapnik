@@ -14,6 +14,7 @@ GPATH = $(shell pwd)
 install: fmt get-deps
 	./install.sh
 	@GOPATH=${GPATH} go build -o TileServer ${PROJECT_NAME}/main.go
+	# sudo journalctl -f -u tileserver.service
 
 fmt:
 	@GOPATH=${GPATH} gofmt -s -w ${PROJECT_NAME}

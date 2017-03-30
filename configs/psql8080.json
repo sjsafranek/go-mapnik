@@ -2,9 +2,8 @@
     "cache": "postgres://mapnik:dev@localhost/mbtiles",
     "engine": "postgres",
     "layers": {
-        "sample": "sampledata/world/stylesheet.xml",
+        "world": "sampledata/world/stylesheet.xml",
         "population": "sampledata/world_population/population.xml",
-		"osmORIGINAL": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
 		"osm": "http://tile.openstreetmap.org/{z}/{x}/{y}.png"
     },
     "port": 8080
