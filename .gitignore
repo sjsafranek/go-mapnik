@@ -40,6 +40,5 @@ log/
 
 # Misc
 .vagrant
-access.log
-
-
+*.log
+*.png

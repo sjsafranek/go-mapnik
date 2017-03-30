@@ -10,11 +10,12 @@ import (
 	"time"
 
 	log "github.com/cihub/seelog"
-	"tileserver/ligneous"
 )
 
+import "ligneous"
+
 func init() {
-	logger, _ := ligneous.InitLogger()
+	logger, _ := ligneous.InitLogger("SQLite3 TileServer")
 	log.UseLogger(logger)
 }
 

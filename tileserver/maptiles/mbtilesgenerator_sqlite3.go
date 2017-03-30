@@ -4,11 +4,12 @@ import (
 	"database/sql"
 	log "github.com/cihub/seelog"
 	_ "github.com/mattn/go-sqlite3"
-	"tileserver/ligneous"
 )
 
+import "ligneous"
+
 func init() {
-	logger, _ := ligneous.InitLogger()
+	logger, _ := ligneous.InitLogger("SQLite3 MBTiles")
 	log.UseLogger(logger)
 }
 
@@ -157,10 +158,10 @@ func (self *TileDbSqlite3) fetch(r TileFetchRequest) {
 	zoom, x, y, l := r.Coord.Zoom, r.Coord.X, r.Coord.Y, r.Coord.Layer
 	result := TileFetchResult{r.Coord, nil}
 	queryString := `
-		SELECT tile_data 
-		FROM tiles 
-		WHERE zoom_level=? 
-			AND tile_column=? 
+		SELECT tile_data
+		FROM tiles
+		WHERE zoom_level=?
+			AND tile_column=?
 			AND tile_row=?
 			AND layer_id=?
 		`
