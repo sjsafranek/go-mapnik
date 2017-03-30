@@ -9,18 +9,18 @@ import (
 	"strings"
 	"time"
 
-	"tileserver/ligneous"
-	"tileserver/mapnik"
-
 	log "github.com/cihub/seelog"
 )
+
+import "ligneous"
+import "mapnik"
 
 var ProxyClient = &http.Client{
 	Timeout: time.Second * 30,
 }
 
 func init() {
-	logger, _ := ligneous.InitLogger()
+	logger, _ := ligneous.InitLogger("Renderer")
 	log.UseLogger(logger)
 }
 

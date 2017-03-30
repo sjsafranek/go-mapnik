@@ -10,11 +10,12 @@ import (
 
 	log "github.com/cihub/seelog"
 	"github.com/gorilla/mux"
-	"tileserver/ligneous"
 )
 
+import "ligneous"
+
 func init() {
-	logger, _ := ligneous.InitLogger()
+	logger, _ := ligneous.InitLogger("SQLite3 Mux")
 	log.UseLogger(logger)
 }
 

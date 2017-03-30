@@ -2,24 +2,27 @@
 ## Makefile
 ## Created: Wed Aug 05 14:35:14 PDT 2015 @941 /Internet Time/
 # :mode=makefile:tabSize=3:indentSize=3:
-## Purpose: 
+## Purpose:
 ##======================================================================##
 
 SHELL=/bin/bash
 PROJECT_NAME = tileserver
 GPATH = $(shell pwd)
 
-.PHONY: fmt install get scrape build clean 
+.PHONY: fmt install get-deps scrape build clean
 
-install: fmt
-	@GOPATH=${GPATH} go install ${PROJECT_NAME}
+install: fmt get-deps
+	./install.sh
+	@GOPATH=${GPATH} go build -o TileServer ${PROJECT_NAME}/main.go
 
 fmt:
-	@GOPATH=${GPATH} gofmt -s -w src/${PROJECT_NAME}
 	@GOPATH=${GPATH} gofmt -s -w ${PROJECT_NAME}
 
-get:
-	@GOPATH=${GPATH} go get ${OPTS} ${ARGS}
+get-deps:
+	@GOPATH=${GPATH} go get -v github.com/mattn/go-sqlite3
+	@GOPATH=${GPATH} go get -v github.com/lib/pq
+	@GOPATH=${GPATH} go get -v github.com/cihub/seelog
+	@GOPATH=${GPATH} go get -v github.com/gorilla/mux
 
 scrape:
 	@find src -type d -name '.hg' -or -type d -name '.git' | xargs rm -rf

@@ -4,11 +4,12 @@ import (
 	"database/sql"
 	log "github.com/cihub/seelog"
 	_ "github.com/lib/pq"
-	"tileserver/ligneous"
 )
 
+import "ligneous"
+
 func init() {
-	logger, _ := ligneous.InitLogger()
+	logger, _ := ligneous.InitLogger("PG MBTiles")
 	log.UseLogger(logger)
 }
 
@@ -161,10 +162,10 @@ func (self *TileDbPostgresql) fetch(r TileFetchRequest) {
 	zoom, x, y, l := r.Coord.Zoom, r.Coord.X, r.Coord.Y, r.Coord.Layer
 	result := TileFetchResult{r.Coord, nil}
 	queryString := `
-		SELECT tile_data 
-		FROM tiles 
-		WHERE zoom_level=$1 
-			AND tile_column=$2 
+		SELECT tile_data
+		FROM tiles
+		WHERE zoom_level=$1
+			AND tile_column=$2
 			AND tile_row=$3
 			AND layer_id=$4
 		`

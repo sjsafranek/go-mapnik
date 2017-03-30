@@ -13,7 +13,7 @@ var (
 	LogLevel string = "debug"
 )
 
-func InitLogger() (seelog.LoggerInterface, error) {
+func InitLogger(prefix string) (seelog.LoggerInterface, error) {
 	logging_config := `
 <seelog minlevel="` + LogLevel + `">
     <outputs formatid="common">
@@ -27,8 +27,8 @@ func InitLogger() (seelog.LoggerInterface, error) {
         </filter>
     </outputs>
     <formats>
-        <format id="common"   format="%Date %Time [%LEVEL] %File %FuncShort:%Line %Msg %n" />
-        <format id="stdout"   format="%Date %Time [%LEVEL] %File %FuncShort:%Line %Msg %n" />
+        <format id="common"   format="[` + prefix + `] %UTCDate %UTCTime [%LEVEL] %File %FuncShort:%Line %Msg %n" />
+        <format id="stdout"   format="[` + prefix + `] %UTCDate %UTCTime [%LEVEL] %File %FuncShort:%Line %Msg %n" />
     </formats>
 </seelog>
 `

@@ -9,11 +9,11 @@ import (
 	"os"
 	"time"
 
-	"tileserver/ligneous"
-	"tileserver/maptiles"
-
 	log "github.com/cihub/seelog"
 )
+
+import "ligneous"
+import "maptiles"
 
 type Config struct {
 	Cache  string            `json:"cache"`
@@ -29,7 +29,7 @@ var (
 	// db_cache string
 	config_file   string
 	print_version bool
-	version       string = "0.1.2"
+	version       string = "0.1.3"
 	//logger seelog.LoggerInterface
 )
 
@@ -112,7 +112,7 @@ func init() {
 		os.Exit(1)
 	}
 
-	logger, err := ligneous.InitLogger()
+	logger, err := ligneous.InitLogger("TileServer")
 	if nil != err {
 		fmt.Println("Error starting logging")
 		os.Exit(1)

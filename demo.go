@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"./mapnik"
+	"./tileserver/mapnik"
 )
 
 // Render a simple map of europe to a PNG file
@@ -28,5 +28,5 @@ func SimpleExample(map_file string) {
 }
 
 func main() {
-	SimpleExample("demo/population.xml")
+	SimpleExample("sampledata/world_population/population.xml")
 }

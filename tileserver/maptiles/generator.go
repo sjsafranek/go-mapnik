@@ -6,12 +6,13 @@ import (
 	"os"
 
 	log "github.com/cihub/seelog"
-	"tileserver/ligneous"
-	"tileserver/mapnik"
 )
 
+import "ligneous"
+import "mapnik"
+
 func init() {
-	logger, _ := ligneous.InitLogger()
+	logger, _ := ligneous.InitLogger("Generator")
 	log.UseLogger(logger)
 }
 
