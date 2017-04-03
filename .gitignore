@@ -46,3 +46,4 @@ log/
 *.log
 *.png
 TileServer
+caddy
