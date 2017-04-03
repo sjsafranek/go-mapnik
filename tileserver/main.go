@@ -29,7 +29,7 @@ var (
 	// db_cache string
 	config_file   string
 	print_version bool
-	version       string = "0.1.3"
+	version       string = "0.1.4"
 	//logger seelog.LoggerInterface
 )
 

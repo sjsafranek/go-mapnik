@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"regexp"
+	//"regexp"
 	"runtime"
 	"strconv"
 	"time"
@@ -33,7 +33,6 @@ func NewTileServerSqlite(cacheFile string) *TileServerSqlite {
 	t := TileServerSqlite{}
 	t.lmp = NewLayerMultiplex()
 	t.m = NewTileDbSqlite(cacheFile)
-	// t.m = NewTileDbPostgresql(cacheFile)
 	t.startTime = time.Now()
 	return &t
 }
@@ -106,10 +105,11 @@ func (self *TileServerSqlite) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	var pathRegex = regexp.MustCompile(`/([A-Za-z0-9]+)/([0-9]+)/([0-9]+)/([0-9]+)\.png`)
-	path := pathRegex.FindStringSubmatch(r.URL.Path)
+	//var pathRegex = regexp.MustCompile(`/([A-Za-z0-9]+)/([0-9]+)/([0-9]+)/([0-9]+)\.png`)
+	//path := pathRegex.FindStringSubmatch(r.URL.Path)
+	path, err := ParseTileUrl(r.URL.Path)
 
-	if path == nil {
+	if nil != err {
 		log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 		self.RequestErrorHandler(w, r)
 		return

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"regexp"
+	//"regexp"
 	"runtime"
 	"strconv"
 	"time"
@@ -18,8 +18,6 @@ func init() {
 	logger, _ := ligneous.InitLogger("PG TileServer")
 	log.UseLogger(logger)
 }
-
-// TODO serve list of registered layers per HTTP (preferably leafletjs-compatible js-array)
 
 // Handles HTTP requests for map tiles, caching any produced tiles
 // in an MBtiles 1.2 compatible sqlite db.
@@ -103,13 +101,13 @@ func (self *TileServerPostgres) ServeHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var pathRegex = regexp.MustCompile(`/([A-Za-z0-9]+)/([0-9]+)/([0-9]+)/([0-9]+)\.png`)
-	path := pathRegex.FindStringSubmatch(r.URL.Path)
+	//var pathRegex = regexp.MustCompile(`/([A-Za-z0-9]+)/([0-9]+)/([0-9]+)/([0-9]+)\.png`)
+	//path := pathRegex.FindStringSubmatch(r.URL.Path)
+	path, err := ParseTileUrl(r.URL.Path)
 
-	if path == nil {
+	if nil != err {
 		log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 		self.RequestErrorHandler(w, r)
-		//http.NotFound(w, r)
 		return
 	}
 
