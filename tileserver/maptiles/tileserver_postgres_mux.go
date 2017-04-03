@@ -25,7 +25,6 @@ type TileServerPostgresMux struct {
 func NewTileServerPostgresMux(cacheFile string) *TileServerPostgresMux {
 	t := TileServerPostgresMux{}
 	t.lmp = NewLayerMultiplex()
-	// t.m = NewTileDbSqlite(cacheFile)
 	t.m = NewTileDbPostgresql(cacheFile)
 	t.startTime = time.Now()
 

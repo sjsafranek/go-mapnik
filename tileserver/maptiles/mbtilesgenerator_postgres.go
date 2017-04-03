@@ -20,7 +20,6 @@ func NewTileDbPostgresql(path string) *TileDbPostgresql {
 	var err error
 	m.db, err = sql.Open("postgres", path)
 	if err != nil {
-		// Ligneousger.Println("Error opening db", err.Error())
 		Ligneous.Error(err)
 		return nil
 	}

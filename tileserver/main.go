@@ -36,7 +36,8 @@ var (
 func TileserverWithCaching(engine string, layer_config map[string]string) {
 	bind := fmt.Sprintf("0.0.0.0:%v", config.Port)
 	if engine == "postgres" {
-		t := maptiles.NewTileServerPostgres(config.Cache)
+		//t := maptiles.NewTileServerPostgres(config.Cache)
+		t := maptiles.NewTileServerPostgresMux(config.Cache)
 		for i := range layer_config {
 			t.AddMapnikLayer(i, layer_config[i])
 		}
@@ -44,8 +45,9 @@ func TileserverWithCaching(engine string, layer_config map[string]string) {
 		maptiles.Ligneous.Info("*** ", config.Cache)
 		maptiles.Ligneous.Info(fmt.Sprintf("Magic happens on port %v...", config.Port))
 		srv := &http.Server{
-			Addr:         bind,
-			Handler:      t,
+			Addr: bind,
+			//Handler:      t,
+			Handler:      t.Router,
 			ReadTimeout:  5 * time.Second,
 			WriteTimeout: 10 * time.Second,
 		}

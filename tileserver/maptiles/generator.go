@@ -3,7 +3,6 @@ package maptiles
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 )
 
 import "mapnik"
@@ -14,13 +13,7 @@ type Generator struct {
 	Threads int
 }
 
-func ensureDirExists(path string) {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		os.Mkdir(path, 0755)
-	}
-}
-
-// Generates tile files as a <zoom>/<x>/<y>.png file hierarchy in the current
+// Run generates tile files as a <zoom>/<x>/<y>.png file hierarchy in the current
 // work directory.
 func (g *Generator) Run(lowLeft, upRight mapnik.Coord, minZ, maxZ uint64, name string) {
 	c := make(chan TileCoord)

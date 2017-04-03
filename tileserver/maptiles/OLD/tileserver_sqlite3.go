@@ -7,29 +7,33 @@ import (
 	"time"
 )
 
+// TileServerSqlite Sqlite3 tile server.
 // Handles HTTP requests for map tiles, caching any produced tiles
 // in an MBtiles 1.2 compatible sqlite db.
-type TileServerPostgres struct {
+type TileServerSqlite struct {
 	engine    string
-	m         *TileDbPostgresql
+	m         *TileDbSqlite3
 	lmp       *LayerMultiplex
 	TmsSchema bool
 	startTime time.Time
 }
 
-func NewTileServerPostgres(cacheFile string) *TileServerPostgres {
-	t := TileServerPostgres{}
+// NewTileServerSqlite creates TileServerSqlite object.
+func NewTileServerSqlite(cacheFile string) *TileServerSqlite {
+	t := TileServerSqlite{}
 	t.lmp = NewLayerMultiplex()
-	t.m = NewTileDbPostgresql(cacheFile)
+	t.m = NewTileDbSqlite(cacheFile)
 	t.startTime = time.Now()
 	return &t
 }
 
-func (self *TileServerPostgres) AddMapnikLayer(layerName string, stylesheet string) {
+// AddMapnikLayer adds mapnik layer to server.
+func (self *TileServerSqlite) AddMapnikLayer(layerName string, stylesheet string) {
 	self.lmp.AddRenderer(layerName, stylesheet)
 }
 
-func (self *TileServerPostgres) ServeTileRequest(w http.ResponseWriter, r *http.Request, tc TileCoord) {
+// ServeTileRequest serves tile request.
+func (self *TileServerSqlite) ServeTileRequest(w http.ResponseWriter, r *http.Request, tc TileCoord) {
 	ch := make(chan TileFetchResult)
 
 	tr := TileFetchRequest{tc, ch}
@@ -52,6 +56,7 @@ func (self *TileServerPostgres) ServeTileRequest(w http.ResponseWriter, r *http.
 
 	w.Header().Set("Content-Type", "image/png")
 	w.WriteHeader(http.StatusOK)
+
 	_, err := w.Write(result.BlobPNG)
 	if err != nil {
 		Ligneous.Error(err)
@@ -61,7 +66,8 @@ func (self *TileServerPostgres) ServeTileRequest(w http.ResponseWriter, r *http.
 	}
 }
 
-func (self *TileServerPostgres) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+// ServeHTTP http server.
+func (self *TileServerSqlite) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	start := time.Now()
 
@@ -99,7 +105,8 @@ func (self *TileServerPostgres) ServeHTTP(w http.ResponseWriter, r *http.Request
 	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
-func (self *TileServerPostgres) RequestErrorHandler(w http.ResponseWriter, r *http.Request) {
+// RequestErrorHandler handles error response.
+func (self *TileServerSqlite) RequestErrorHandler(w http.ResponseWriter, r *http.Request) {
 	response := make(map[string]interface{})
 	response["status"] = "error"
 	result := make(map[string]interface{})
@@ -108,7 +115,8 @@ func (self *TileServerPostgres) RequestErrorHandler(w http.ResponseWriter, r *ht
 	SendJsonResponseFromInterface(w, r, response)
 }
 
-func (self *TileServerPostgres) IndexHandler(w http.ResponseWriter, r *http.Request) {
+// IndexHandler for server.
+func (self *TileServerSqlite) IndexHandler(w http.ResponseWriter, r *http.Request) {
 	response := make(map[string]interface{})
 	response["status"] = "ok"
 	result := make(map[string]interface{})
@@ -117,7 +125,8 @@ func (self *TileServerPostgres) IndexHandler(w http.ResponseWriter, r *http.Requ
 	SendJsonResponseFromInterface(w, r, response)
 }
 
-func (self *TileServerPostgres) MetadataHandler(w http.ResponseWriter, r *http.Request) {
+// MetadataHandler for tile server.
+func (self *TileServerSqlite) MetadataHandler(w http.ResponseWriter, r *http.Request) {
 	// todo: include layer
 	metadata := self.m.MetaDataHandler()
 	response := make(map[string]interface{})
@@ -126,8 +135,8 @@ func (self *TileServerPostgres) MetadataHandler(w http.ResponseWriter, r *http.R
 	SendJsonResponseFromInterface(w, r, response)
 }
 
-// PingHandler provides an api route for server health check
-func (self *TileServerPostgres) PingHandler(w http.ResponseWriter, r *http.Request) {
+// PingHandler provides an api route for server health check.
+func (self *TileServerSqlite) PingHandler(w http.ResponseWriter, r *http.Request) {
 	response := make(map[string]interface{})
 	response["status"] = "ok"
 	result := make(map[string]interface{})
@@ -136,8 +145,8 @@ func (self *TileServerPostgres) PingHandler(w http.ResponseWriter, r *http.Reque
 	SendJsonResponseFromInterface(w, r, response)
 }
 
-// ServerProfile returns basic server stats
-func (self *TileServerPostgres) ServerHandler(w http.ResponseWriter, r *http.Request) {
+// ServerHandler returns basic server stats.
+func (self *TileServerSqlite) ServerHandler(w http.ResponseWriter, r *http.Request) {
 	var data map[string]interface{}
 	data = make(map[string]interface{})
 	data["registered"] = self.startTime.UTC()
@@ -150,7 +159,8 @@ func (self *TileServerPostgres) ServerHandler(w http.ResponseWriter, r *http.Req
 	SendJsonResponseFromInterface(w, r, response)
 }
 
-func (self *TileServerPostgres) TileLayersHandler(w http.ResponseWriter, r *http.Request) {
+// TileLayersHandler returns list of tiles.
+func (self *TileServerSqlite) TileLayersHandler(w http.ResponseWriter, r *http.Request) {
 	var keys []string
 	for k := range self.lmp.layerChans {
 		keys = append(keys, k)

@@ -26,7 +26,6 @@ func NewTileServerSqliteMux(cacheFile string) *TileServerSqliteMux {
 	t := TileServerSqliteMux{}
 	t.lmp = NewLayerMultiplex()
 	t.m = NewTileDbSqlite(cacheFile)
-	// t.m = NewTileDbPostgresql(cacheFile)
 	t.startTime = time.Now()
 
 	t.Router = mux.NewRouter()
