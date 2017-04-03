@@ -1,5 +1,7 @@
 <html>
 	<head>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
 		<link rel="stylesheet" href="leaflet/leaflet.css" />
 		<script type="text/javascript" src="leaflet/leaflet.js"></script>
 	</head>
@@ -7,14 +9,64 @@
 
 	</body>
 	<script type="text/javascript">
-		var map = L.map('map',{
-			maxZoom:20,
-			layers: [
-				//L.tileLayer('http://localhost:8080/osm/{z}/{x}/{y}.png'),
-				L.tileLayer('http://localhost:8080/population/{z}/{x}/{y}.png')
-				//L.tileLayer('http://localhost:8080/world/{z}/{x}/{y}.png')
-				// L.tileLayer('http://localhost:8080/sample/{z}/{x}/{y}.png')
-			]
-		}).setView([0,0], 2)
+
+		var map,
+			baseLayers;
+		var server = 'http://localhost:8080';
+
+		// createTileLayer creates leaflet tilelayer from url
+		function createTileLayer(url) {
+			return L.tileLayer(url, {
+				attribution: '&cospy; <a href="https://github.com/sjsafranek/go-mapnik"> Go-Mapnik </a>',
+				reuseTiles: true
+			});
+		}
+
+		function initialize() {
+
+			baseLayers = {
+				"OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+					attribution: '&cospy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors | <a href="https://mapicons.mapsmarker.com">Maps Icons Collection</a>',
+					reuseTiles: true
+				})
+			}
+
+			map = L.map('map',{
+				maxZoom:20,
+				layers: [
+					baseLayers['OpenStreetMap']
+				]
+			}).setView([0,0], 2);
+
+			// Get available tile layers from api request.
+			$.getJSON( server + '/tilelayers', {}, function(result) {
+
+				// Check for successful response.
+				if ('ok' === result.status) {
+
+					// Create tilelayer urls and add them to `baseLayers`.
+					for (var i in result.data) {
+						var name = result.data[i];
+						var url  = server + '/' + name + '/{z}/{x}/{y}.png';
+						baseLayers[name] = createTileLayer(url);
+					}
+
+					// Use `baseLayers` to create a leaflet layer control
+					// and add to map.
+					var layer_control = L.control.layers(baseLayers, {});
+					layer_control.addTo(map);
+
+				} else {
+					// Throw error if response has failed.
+					throw new Error(JSON.stringify(result));
+				}
+
+			} );
+		}
+
+	//	$(function() { initialize(); });
+
+		$(document).ready(initialize);
+
 	</script>
 </html>
