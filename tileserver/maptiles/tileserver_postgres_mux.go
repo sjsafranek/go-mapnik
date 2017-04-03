@@ -33,7 +33,7 @@ func NewTileServerPostgresMux(cacheFile string) *TileServerPostgresMux {
 	t.Router.HandleFunc("/", t.IndexHandler).Methods("GET")
 	t.Router.HandleFunc("/ping", t.PingHandler).Methods("GET")
 	t.Router.HandleFunc("/server", t.ServerProfileHandler).Methods("GET")
-	t.Router.HandleFunc("/metadata", t.MetadataHandler).Methods("GET")
+	t.Router.HandleFunc("/{lyr}/metadata", t.MetadataHandler).Methods("GET")
 	t.Router.HandleFunc("/tilelayers", t.TileLayersHandler).Methods("GET")
 	t.Router.HandleFunc("/{lyr}/{z:[0-9]+}/{x:[0-9]+}/{y:[0-9]+}.png", t.ServeTileRequest).Methods("GET")
 
@@ -114,7 +114,9 @@ func (self *TileServerPostgresMux) IndexHandler(w http.ResponseWriter, r *http.R
 // MetadataHandler for tile server.
 func (self *TileServerPostgresMux) MetadataHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	metadata := self.m.MetaDataHandler()
+	vars := mux.Vars(r)
+	lyr := vars["lyr"]
+	metadata := self.m.MetaDataHandler(lyr)
 	response := make(map[string]interface{})
 	response["status"] = "ok"
 	response["data"] = metadata

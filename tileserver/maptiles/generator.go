@@ -7,6 +7,7 @@ import (
 
 import "mapnik"
 
+// Generator struct for tile generation.
 type Generator struct {
 	MapFile string
 	TileDir string

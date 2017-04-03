@@ -4,6 +4,7 @@ import (
 	"math"
 )
 
+// minmax gets min and max.
 // This has been reimplemented based on OpenStreetMap generate_tiles.py
 func minmax(a, b, c float64) float64 {
 	a = math.Max(a, b)
@@ -11,6 +12,7 @@ func minmax(a, b, c float64) float64 {
 	return a
 }
 
+// gp struct for ???
 var gp struct {
 	Bc []float64
 	Cc []float64
@@ -30,6 +32,7 @@ func init() {
 	}
 }
 
+// fromLLtoPixel converts LatLng to pixel coordinate.
 func fromLLtoPixel(ll [2]float64, zoom uint64) [2]float64 {
 	d := gp.zc[zoom]
 	e := math.Trunc((d[0] + ll[0]*gp.Bc[zoom]) + 0.5)
@@ -38,6 +41,7 @@ func fromLLtoPixel(ll [2]float64, zoom uint64) [2]float64 {
 	return [2]float64{e, g}
 }
 
+// fromPixelToLL converts pixel coordinate to LatLng.
 func fromPixelToLL(px [2]float64, zoom uint64) [2]float64 {
 	e := gp.zc[zoom]
 	f := (px[0] - e[0]) / gp.Bc[zoom]

@@ -5,6 +5,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// TileDbSqlite3 struct for SQLite3 MBTile database.
 // MBTiles 1.2-compatible Tile Db with multi-layer support.
 // Was named Mbtiles before, hence the use of *m in methods.
 type TileDbSqlite3 struct {
@@ -15,6 +16,8 @@ type TileDbSqlite3 struct {
 	qc          chan bool
 }
 
+// NewTileDbSqlite creates TileDbSqlite3 struct.
+// Creates database tables and initializes tile request channels.
 func NewTileDbSqlite(path string) *TileDbSqlite3 {
 	m := TileDbSqlite3{}
 	var err error
@@ -55,6 +58,8 @@ func NewTileDbSqlite(path string) *TileDbSqlite3 {
 	return &m
 }
 
+// readLayers reads through tile layers table and sets up
+// lookup table for layer names and indexes.
 func (self *TileDbSqlite3) readLayers() {
 	self.layerIds = make(map[string]int)
 	rows, err := self.db.Query("SELECT rowid, layer_name FROM layers")
@@ -74,6 +79,7 @@ func (self *TileDbSqlite3) readLayers() {
 	}
 }
 
+// ensureLayer checks if tile layer is in lookup table.
 func (self *TileDbSqlite3) ensureLayer(layer string) {
 	if _, ok := self.layerIds[layer]; !ok {
 		if _, err := self.db.Exec("INSERT OR IGNORE INTO layers(layer_name) VALUES(?)", layer); err != nil {
@@ -83,6 +89,7 @@ func (self *TileDbSqlite3) ensureLayer(layer string) {
 	}
 }
 
+// Close tile request channels.
 func (self *TileDbSqlite3) Close() {
 	close(self.insertChan)
 	close(self.requestChan)
@@ -95,14 +102,17 @@ func (self *TileDbSqlite3) Close() {
 
 }
 
+// InsertQueue gets tile insert channel.
 func (self TileDbSqlite3) InsertQueue() chan<- TileFetchResult {
 	return self.insertChan
 }
 
+// RequestQueue gets tile request channel.
 func (self TileDbSqlite3) RequestQueue() chan<- TileFetchRequest {
 	return self.requestChan
 }
 
+// Run runs tile generation.
 // Best executed in a dedicated go routine.
 func (self *TileDbSqlite3) Run() {
 	self.qc = make(chan bool)
@@ -117,6 +127,7 @@ func (self *TileDbSqlite3) Run() {
 	self.qc <- true
 }
 
+// insert tile request into database table.
 func (self *TileDbSqlite3) insert(i TileFetchResult) {
 	i.Coord.setTMS(true)
 	x, y, zoom, l := i.Coord.X, i.Coord.Y, i.Coord.Zoom, i.Coord.Layer
@@ -145,6 +156,7 @@ func (self *TileDbSqlite3) insert(i TileFetchResult) {
 	}
 }
 
+// fetch gets cached tile from database.
 func (self *TileDbSqlite3) fetch(r TileFetchRequest) {
 	r.Coord.setTMS(true)
 	zoom, x, y, l := r.Coord.Zoom, r.Coord.X, r.Coord.Y, r.Coord.Layer
@@ -172,9 +184,9 @@ func (self *TileDbSqlite3) fetch(r TileFetchRequest) {
 	r.OutChan <- result
 }
 
-// gets tile data
-func (self *TileDbSqlite3) MetaDataHandler() map[string]string {
-	rows, _ := self.db.Query("SELECT * FROM metadata")
+// MetaDataHandler gets metadata from database.
+func (self *TileDbSqlite3) MetaDataHandler(lyr string) map[string]string {
+	rows, _ := self.db.Query("SELECT * FROM metadata WHERE layer_name=?", lyr)
 	metadata := make(map[string]string)
 	for rows.Next() {
 		var name string

@@ -5,6 +5,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// TileDbPostgresql struct for PostgreSQL MBTile database.
 // MBTiles 1.2-compatible Tile Db with multi-layer support.
 // Was named Mbtiles before, hence the use of *m in methods.
 type TileDbPostgresql struct {
@@ -15,6 +16,8 @@ type TileDbPostgresql struct {
 	qc          chan bool
 }
 
+// NewTileDbPostgresql creates TileDbPostgresql struct.
+// Creates database tables and initializes tile request channels.
 func NewTileDbPostgresql(path string) *TileDbPostgresql {
 	m := TileDbPostgresql{}
 	var err error
@@ -74,6 +77,8 @@ func NewTileDbPostgresql(path string) *TileDbPostgresql {
 	return &m
 }
 
+// readLayers reads through tile layers table and sets up
+// lookup table for layer names and indexes.
 func (self *TileDbPostgresql) readLayers() {
 	self.layerIds = make(map[string]int)
 	rows, err := self.db.Query("SELECT rowid, layer_name FROM layers")
@@ -93,9 +98,9 @@ func (self *TileDbPostgresql) readLayers() {
 	}
 }
 
+// ensureLayer checks if tile layer is in lookup table.
 func (self *TileDbPostgresql) ensureLayer(layer string) {
 	if _, ok := self.layerIds[layer]; !ok {
-		// queryString := "INSERT OR IGNORE INTO layers(layer_name) VALUES($1)"
 		queryString := "INSERT INTO layers(layer_name) VALUES($1)"
 		if _, err := self.db.Exec(queryString, layer); err != nil {
 			Ligneous.Debug(err)
@@ -104,6 +109,7 @@ func (self *TileDbPostgresql) ensureLayer(layer string) {
 	}
 }
 
+// Close tile request channels.
 func (self *TileDbPostgresql) Close() {
 	close(self.insertChan)
 	close(self.requestChan)
@@ -116,14 +122,17 @@ func (self *TileDbPostgresql) Close() {
 
 }
 
+// InsertQueue gets tile insert channel.
 func (self TileDbPostgresql) InsertQueue() chan<- TileFetchResult {
 	return self.insertChan
 }
 
+// RequestQueue gets tile request channel.
 func (self TileDbPostgresql) RequestQueue() chan<- TileFetchRequest {
 	return self.requestChan
 }
 
+// Run runs tile generation.
 // Best executed in a dedicated go routine.
 func (self *TileDbPostgresql) Run() {
 	self.qc = make(chan bool)
@@ -138,6 +147,7 @@ func (self *TileDbPostgresql) Run() {
 	self.qc <- true
 }
 
+// insert tile request into database table.
 func (self *TileDbPostgresql) insert(i TileFetchResult) {
 	i.Coord.setTMS(true)
 	x, y, zoom, l := i.Coord.X, i.Coord.Y, i.Coord.Zoom, i.Coord.Layer
@@ -160,13 +170,13 @@ func (self *TileDbPostgresql) insert(i TileFetchResult) {
 		Ligneous.Trace("Insert blob", self.layerIds[l], zoom, x, y)
 	}
 	self.ensureLayer(l)
-	// queryString = "REPLACE INTO tiles VALUES($1, $2, $3, $4, $5)"
 	queryString = "INSERT INTO tiles VALUES($1, $2, $3, $4, $5)"
 	if _, err = self.db.Exec(queryString, self.layerIds[l], zoom, x, y, i.BlobPNG); err != nil {
 		Ligneous.Error(err)
 	}
 }
 
+// fetch gets cached tile from database.
 func (self *TileDbPostgresql) fetch(r TileFetchRequest) {
 	r.Coord.setTMS(true)
 	zoom, x, y, l := r.Coord.Zoom, r.Coord.X, r.Coord.Y, r.Coord.Layer
@@ -194,9 +204,9 @@ func (self *TileDbPostgresql) fetch(r TileFetchRequest) {
 	r.OutChan <- result
 }
 
-// gets tile data
-func (self *TileDbPostgresql) MetaDataHandler() map[string]string {
-	rows, _ := self.db.Query("SELECT * FROM metadata")
+// MetaDataHandler gets metadata from database.
+func (self *TileDbPostgresql) MetaDataHandler(lyr string) map[string]string {
+	rows, _ := self.db.Query("SELECT * FROM metadata WHERE layer_name=$1", lyr)
 	metadata := make(map[string]string)
 	for rows.Next() {
 		var name string
