@@ -36,6 +36,14 @@ func NewTileDbPostgresql(path string) *TileDbPostgresql {
 		"CREATE TABLE IF NOT EXISTS layers (layer_name TEXT PRIMARY KEY NOT NULL, rowid SERIAL);",
 		"CREATE TABLE IF NOT EXISTS metadata (name TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL, layer_name TEXT NOT NULL);",
 		"CREATE TABLE IF NOT EXISTS tiles (layer_id INTEGER, zoom_level INTEGER, tile_column INTEGER, tile_row INTEGER, tile_data BYTEA);",
+		"COMMENT ON TABLE layers IS 'Names of tile layers';",
+		"COMMENT ON TABLE metadata IS 'Metadata for tile server';",
+		"COMMENT ON TABLE tiles IS 'Cached png map tiles';",
+		"COMMENT ON COLUMN layers.layer_name IS 'Tile layer name';",
+		"COMMENT ON COLUMN layers.rowid IS 'Tile layer index';",
+		//"COMMENT ON COLUMN metadata IS 'Metadata for tile server'",
+		//"COMMENT ON COLUMN tiles IS 'Cached png map tiles'",
+
 		// "INSERT INTO metadata(name,value,layer_name) VALUES('name', 'go-mapnik cache file', 'default')",
 		// "INSERT INTO metadata(name,value,layer_name) VALUES('type', 'overlay', 'default')", //baselayer
 		// "INSERT INTO metadata(name,value,layer_name) VALUES('version', '1', 'default')",

@@ -4,7 +4,7 @@ go-mapnik
 Go bindings for mapnik 2.2 and Mapnik 3.0 (http://www.mapnik.org or
 http://github.com/mapnik/mapnik)
 
-These bindings rely on http://github.com/springmeyer/mapnik-c-api. 
+These bindings rely on http://github.com/springmeyer/mapnik-c-api.
 
 Requires
 -----------
@@ -17,7 +17,7 @@ Requires
   `$ adduser mapnik`
   *** password 'dev'
 
-#### create new postgres user and database table 
+#### create new postgres user and database table
 $ sudo -i -u postgres
 $ psql
  - postgres=# CREATE USER mapnik WITH PASSWORD 'dev';
@@ -77,13 +77,13 @@ Installation
 
 1. Install Mapnik build environmnent,
 	- e.g. Ubuntu: `apt-get install libmapnik-dev`
-2. Download the sources, either by 
-    - `git clone` the repository to $GOPATH/src/fawick/go-mapnik 
+2. Download the sources, either by
+    - `git clone` the repository to $GOPATH/src/fawick/go-mapnik
 
 	OR
 
     - `go get -d github.com/fawick/go-mapnik/mapnik`
-3. `cd mapnik` and run the configuration script `./configure.bash`. 
+3. `cd mapnik` and run the configuration script `./configure.bash`.
    That script will setup the correct paths for including Mapnik headers and
    linking against the Mapnik shared library, as well as download the Mapnik C
    API source and `go install` the bindings.
@@ -92,9 +92,9 @@ Installation
 
 ### Windows
 
-On Windows, go-mapnik is restricted to GOARCH=386 and Mapnik 2.2 for the moment, 
-as the precompiled 2.2 SDK is build with MSVC 32-bit and the C api must be build with a 
-compatible compiler as a DLL before the Go bindings can be linked against it. 
+On Windows, go-mapnik is restricted to GOARCH=386 and Mapnik 2.2 for the moment,
+as the precompiled 2.2 SDK is build with MSVC 32-bit and the C api must be build with a
+compatible compiler as a DLL before the Go bindings can be linked against it.
 
 You also need to have the MSVC 10 compiler installed on your system.
 
@@ -105,11 +105,11 @@ binaries on your own.
 
 
 1. Install Mapnik 2.2 Windows 32bit SDK from http://mapnik.org/pages/downloads.html
-2. Download the sources, either by 
-    + `git clone` the repository to $GOPATH/src/fawick/go-mapnik 
-	
+2. Download the sources, either by
+    + `git clone` the repository to $GOPATH/src/fawick/go-mapnik
+
     OR
-	
+
     + `go get -d github.com/fawick/go-mapnik/mapnik`
 3. Run `configure.cmd` in the folder `mapnik` to compile a C DLL
    that can be used by Go/CGO/GCC later (sources will be downloaded
@@ -132,7 +132,7 @@ https://github.com/mapbox/mbtiles-spec/blob/master/1.2/spec.md
 
 
 
-Related Work 
+Related Work
 ------------
 
 There is another Go package that offers access to mapnik at
@@ -140,4 +140,4 @@ https://github.com/omniscale/go-mapnik by Oliver Tonnhofer of Omniscale.
 According to them, it is inspired by/based on this package. Instead of fetching
 the latest mapnik-c-api they vendor their own c-code so, their package supports
 some more features of libmapnik directly, such as version information access
-and logging. It has support for Mapnik 3.0 built within. 
+and logging. It has support for Mapnik 3.0 built within.

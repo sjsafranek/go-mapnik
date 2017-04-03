@@ -70,6 +70,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 	# sudo apt-add-repository ppa:ubuntugis/ubuntugis-unstable
 	config.vm.provision "shell", inline: 'aptitude update'
 	config.vm.provision "shell", inline: 'aptitude -yy install curl'
+	config.vm.provision "shell", inline: 'aptitude -yy install htop'
 	#config.vm.provision "shell", inline: 'curl https://getcaddy.com | bash'
 	config.vm.provision "shell", inline: 'aptitude -yy install libmapnik-dev'
 	config.vm.provision "shell", inline: 'aptitude -yy install postgresql'
