@@ -2,6 +2,7 @@ package maptiles
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -142,12 +143,12 @@ func (self *TileDbSqlite3) insert(i TileFetchResult) {
 			Ligneous.Error("error during insert", err)
 			return
 		}
-		Ligneous.Trace("Insert blob ", self.layerIds[l], zoom, x, y)
+		Ligneous.Trace(fmt.Sprintf("INSERT BLOB %v %v %v %v", l, zoom, x, y))
 	case err != nil:
 		Ligneous.Error(err)
 		return
 	default:
-		Ligneous.Trace("Insert blob ", self.layerIds[l], zoom, x, y)
+		Ligneous.Trace(fmt.Sprintf("INSERT BLOB %v %v %v %v", l, zoom, x, y))
 	}
 	self.ensureLayer(l)
 	queryString = "REPLACE INTO tiles VALUES(?, ?, ?, ?, ?)"
@@ -179,7 +180,7 @@ func (self *TileDbSqlite3) fetch(r TileFetchRequest) {
 		Ligneous.Error(err)
 	default:
 		result.BlobPNG = blob
-		Ligneous.Trace("Reusing blob ", self.layerIds[l], zoom, x, y)
+		Ligneous.Trace(fmt.Sprintf("REUSE BLOB %v %v %v %v", l, zoom, x, y))
 	}
 	r.OutChan <- result
 }

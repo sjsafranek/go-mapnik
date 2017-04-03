@@ -2,6 +2,7 @@ package maptiles
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/lib/pq"
 )
 
@@ -162,12 +163,12 @@ func (self *TileDbPostgresql) insert(i TileFetchResult) {
 			Ligneous.Error("error during insert", err)
 			return
 		}
-		Ligneous.Trace("Insert blob", self.layerIds[l], zoom, x, y)
+		Ligneous.Trace(fmt.Sprintf("INSERT BLOB %v %v %v %v", l, zoom, x, y))
 	case err != nil:
 		Ligneous.Error("error during test", err)
 		return
 	default:
-		Ligneous.Trace("Insert blob", self.layerIds[l], zoom, x, y)
+		Ligneous.Trace(fmt.Sprintf("INSERT BLOB %v %v %v %v", l, zoom, x, y))
 	}
 	self.ensureLayer(l)
 	queryString = "INSERT INTO tiles VALUES($1, $2, $3, $4, $5)"
@@ -199,7 +200,7 @@ func (self *TileDbPostgresql) fetch(r TileFetchRequest) {
 		Ligneous.Error(err)
 	default:
 		result.BlobPNG = blob
-		Ligneous.Trace("Reusing blob ", self.layerIds[l], zoom, x, y)
+		Ligneous.Trace(fmt.Sprintf("REUSE BLOB %v %v %v %v", l, zoom, x, y))
 	}
 	r.OutChan <- result
 }

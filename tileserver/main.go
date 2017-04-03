@@ -118,7 +118,7 @@ func getConfig() {
 }
 
 // Before uncommenting the GenerateOSMTiles call make sure you have
-// the neccessary OSM sources. Consult OSM wiki for details.
+// the necessary OSM sources. Consult OSM wiki for details.
 func main() {
 	getConfig()
 	TileserverWithCaching(config.Engine, config.Layers)
