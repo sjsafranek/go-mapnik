@@ -2,16 +2,8 @@ package maptiles
 
 import (
 	"database/sql"
-	log "github.com/cihub/seelog"
 	_ "github.com/mattn/go-sqlite3"
 )
-
-import "ligneous"
-
-func init() {
-	logger, _ := ligneous.InitLogger("SQLite3 MBTiles")
-	log.UseLogger(logger)
-}
 
 // MBTiles 1.2-compatible Tile Db with multi-layer support.
 // Was named Mbtiles before, hence the use of *m in methods.
@@ -28,7 +20,7 @@ func NewTileDbSqlite(path string) *TileDbSqlite3 {
 	var err error
 	m.db, err = sql.Open("sqlite3", path)
 	if err != nil {
-		log.Error("Error opening db", err.Error())
+		Ligneous.Error("Error opening db", err.Error())
 		return nil
 	}
 	queries := []string{
@@ -49,8 +41,8 @@ func NewTileDbSqlite(path string) *TileDbSqlite3 {
 	for _, query := range queries {
 		_, err = m.db.Exec(query)
 		if err != nil {
-			log.Error("Error setting up db", err.Error())
-			log.Debug(query, "\n")
+			Ligneous.Error("Error setting up db", err.Error())
+			Ligneous.Debug(query, "\n")
 			return nil
 		}
 	}
@@ -67,25 +59,25 @@ func (self *TileDbSqlite3) readLayers() {
 	self.layerIds = make(map[string]int)
 	rows, err := self.db.Query("SELECT rowid, layer_name FROM layers")
 	if err != nil {
-		log.Error("Error fetching layer definitions", err.Error())
+		Ligneous.Error("Error fetching layer definitions", err.Error())
 	}
 	var s string
 	var i int
 	for rows.Next() {
 		if err := rows.Scan(&i, &s); err != nil {
-			log.Error(err)
+			Ligneous.Error(err)
 		}
 		self.layerIds[s] = i
 	}
 	if err := rows.Err(); err != nil {
-		log.Error(err)
+		Ligneous.Error(err)
 	}
 }
 
 func (self *TileDbSqlite3) ensureLayer(layer string) {
 	if _, ok := self.layerIds[layer]; !ok {
 		if _, err := self.db.Exec("INSERT OR IGNORE INTO layers(layer_name) VALUES(?)", layer); err != nil {
-			log.Error(err)
+			Ligneous.Error(err)
 		}
 		self.readLayers()
 	}
@@ -98,7 +90,7 @@ func (self *TileDbSqlite3) Close() {
 		<-self.qc // block until channel qc is closed (meaning Run() is finished)
 	}
 	if err := self.db.Close(); err != nil {
-		log.Error(err)
+		Ligneous.Error(err)
 	}
 
 }
@@ -136,20 +128,20 @@ func (self *TileDbSqlite3) insert(i TileFetchResult) {
 	case err == sql.ErrNoRows:
 		queryString = "UPDATE tiles SET tile_data=? WHERE layer_id=? AND zoom_level=? AND tile_column=? AND tile_row=?"
 		if _, err = self.db.Exec(queryString, i.BlobPNG, self.layerIds[l], zoom, x, y); err != nil {
-			log.Error("error during insert", err)
+			Ligneous.Error("error during insert", err)
 			return
 		}
-		log.Trace("Insert blob ", self.layerIds[l], zoom, x, y)
+		Ligneous.Trace("Insert blob ", self.layerIds[l], zoom, x, y)
 	case err != nil:
-		log.Error(err)
+		Ligneous.Error(err)
 		return
 	default:
-		log.Trace("Insert blob ", self.layerIds[l], zoom, x, y)
+		Ligneous.Trace("Insert blob ", self.layerIds[l], zoom, x, y)
 	}
 	self.ensureLayer(l)
 	queryString = "REPLACE INTO tiles VALUES(?, ?, ?, ?, ?)"
 	if _, err = self.db.Exec(queryString, self.layerIds[l], zoom, x, y, i.BlobPNG); err != nil {
-		log.Error(err)
+		Ligneous.Error(err)
 	}
 }
 
@@ -172,10 +164,10 @@ func (self *TileDbSqlite3) fetch(r TileFetchRequest) {
 	case err == sql.ErrNoRows:
 		result.BlobPNG = nil
 	case err != nil:
-		log.Error(err)
+		Ligneous.Error(err)
 	default:
 		result.BlobPNG = blob
-		log.Trace("Reusing blob ", self.layerIds[l], zoom, x, y)
+		Ligneous.Trace("Reusing blob ", self.layerIds[l], zoom, x, y)
 	}
 	r.OutChan <- result
 }

@@ -1,16 +1,5 @@
 package maptiles
 
-import (
-	log "github.com/cihub/seelog"
-)
-
-import "ligneous"
-
-func init() {
-	logger, _ := ligneous.InitLogger("Multiplex")
-	log.UseLogger(logger)
-}
-
 type LayerMultiplex struct {
 	layerChans map[string]chan<- TileFetchRequest
 }
@@ -44,7 +33,7 @@ func (l LayerMultiplex) SubmitRequest(r TileFetchRequest) bool {
 	if ok {
 		c <- r
 	} else {
-		log.Warn("No such layer ", r.Coord.Layer)
+		Ligneous.Warn("No such layer ", r.Coord.Layer)
 	}
 	return ok
 }

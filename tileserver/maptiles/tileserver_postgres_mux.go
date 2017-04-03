@@ -8,16 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	log "github.com/cihub/seelog"
 	"github.com/gorilla/mux"
 )
-
-import "ligneous"
-
-func init() {
-	logger, _ := ligneous.InitLogger("PG Mux")
-	log.UseLogger(logger)
-}
 
 // Handles HTTP requests for map tiles, caching any produced tiles
 // in an MBtiles 1.2 compatible sqlite db.
@@ -87,13 +79,13 @@ func (self *TileServerPostgresMux) ServeTileRequest(w http.ResponseWriter, r *ht
 	w.WriteHeader(http.StatusOK)
 	_, err := w.Write(result.BlobPNG)
 	if err != nil {
-		log.Error(err)
+		Ligneous.Error(err)
 	}
 	if needsInsert {
 		self.m.InsertQueue() <- result // insert newly rendered tile into cache db
 	}
 
-	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 func (self *TileServerPostgresMux) RequestErrorHandler(w http.ResponseWriter, r *http.Request) {
@@ -111,7 +103,7 @@ func (self *TileServerPostgresMux) RequestErrorHandler(w http.ResponseWriter, r 
 		return
 	}
 	w.Write(js)
-	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 func (self *TileServerPostgresMux) IndexHandler(w http.ResponseWriter, r *http.Request) {
@@ -129,7 +121,7 @@ func (self *TileServerPostgresMux) IndexHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 	w.Write(js)
-	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 func (self *TileServerPostgresMux) MetadataHandler(w http.ResponseWriter, r *http.Request) {
@@ -147,7 +139,7 @@ func (self *TileServerPostgresMux) MetadataHandler(w http.ResponseWriter, r *htt
 		return
 	}
 	w.Write(js)
-	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 // PingHandler provides an api route for server health check
@@ -166,7 +158,7 @@ func (self *TileServerPostgresMux) PingHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 	w.Write(js)
-	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 // ServerProfile returns basic server stats
@@ -189,7 +181,7 @@ func (self *TileServerPostgresMux) ServerHandler(w http.ResponseWriter, r *http.
 		return
 	}
 	w.Write(js)
-	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 func (self *TileServerPostgresMux) TileLayersHandler(w http.ResponseWriter, r *http.Request) {
@@ -210,5 +202,5 @@ func (self *TileServerPostgresMux) TileLayersHandler(w http.ResponseWriter, r *h
 		return
 	}
 	w.Write(js)
-	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }

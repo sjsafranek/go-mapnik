@@ -8,16 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	log "github.com/cihub/seelog"
 	"github.com/gorilla/mux"
 )
-
-import "ligneous"
-
-func init() {
-	logger, _ := ligneous.InitLogger("SQLite3 Mux")
-	log.UseLogger(logger)
-}
 
 // Handles HTTP requests for map tiles, caching any produced tiles
 // in an MBtiles 1.2 compatible sqlite db.
@@ -85,21 +77,21 @@ func (self *TileServerSqliteMux) ServeTileRequest(w http.ResponseWriter, r *http
 	}
 
 	// upgrade go1.7
-	//log.Info(len(r.Cancel))
-	//log.Info(r.Context())
+	//Ligneous.Info(len(r.Cancel))
+	//Ligneous.Info(r.Context())
 
 	w.Header().Set("Content-Type", "image/png")
 	w.WriteHeader(http.StatusOK)
 
 	_, err := w.Write(result.BlobPNG)
 	if err != nil {
-		log.Error(err)
+		Ligneous.Error(err)
 	}
 	if needsInsert {
 		self.m.InsertQueue() <- result // insert newly rendered tile into cache db
 	}
 
-	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 
 }
 
@@ -118,7 +110,7 @@ func (self *TileServerSqliteMux) RequestErrorHandler(w http.ResponseWriter, r *h
 		return
 	}
 	w.Write(js)
-	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 func (self *TileServerSqliteMux) IndexHandler(w http.ResponseWriter, r *http.Request) {
@@ -136,7 +128,7 @@ func (self *TileServerSqliteMux) IndexHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 	w.Write(js)
-	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 func (self *TileServerSqliteMux) MetadataHandler(w http.ResponseWriter, r *http.Request) {
@@ -153,7 +145,7 @@ func (self *TileServerSqliteMux) MetadataHandler(w http.ResponseWriter, r *http.
 		return
 	}
 	w.Write(js)
-	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 // PingHandler provides an api route for server health check
@@ -172,7 +164,7 @@ func (self *TileServerSqliteMux) PingHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	w.Write(js)
-	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 // ServerProfile returns basic server stats
@@ -195,7 +187,7 @@ func (self *TileServerSqliteMux) ServerHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 	w.Write(js)
-	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 func (self *TileServerSqliteMux) TileLayersHandler(w http.ResponseWriter, r *http.Request) {
@@ -216,5 +208,5 @@ func (self *TileServerSqliteMux) TileLayersHandler(w http.ResponseWriter, r *htt
 		return
 	}
 	w.Write(js)
-	log.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }

@@ -4,17 +4,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-
-	log "github.com/cihub/seelog"
 )
 
-import "ligneous"
 import "mapnik"
-
-func init() {
-	logger, _ := ligneous.InitLogger("Generator")
-	log.UseLogger(logger)
-}
 
 type Generator struct {
 	MapFile string
@@ -34,7 +26,7 @@ func (g *Generator) Run(lowLeft, upRight mapnik.Coord, minZ, maxZ uint64, name s
 	c := make(chan TileCoord)
 	q := make(chan bool)
 
-	log.Debug("starting job", name)
+	Ligneous.Debug("starting job", name)
 
 	ensureDirExists(g.TileDir)
 

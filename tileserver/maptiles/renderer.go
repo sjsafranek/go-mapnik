@@ -8,20 +8,12 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
-	log "github.com/cihub/seelog"
 )
 
-import "ligneous"
 import "mapnik"
 
 var ProxyClient = &http.Client{
 	Timeout: time.Second * 30,
-}
-
-func init() {
-	logger, _ := ligneous.InitLogger("Renderer")
-	log.UseLogger(logger)
 }
 
 func randomNum(min, max int) int {
@@ -66,7 +58,7 @@ func NewTileRendererChan(stylesheet string) chan<- TileFetchRequest {
 			result := TileFetchResult{request.Coord, nil}
 			result.BlobPNG, err = t.RenderTile(request.Coord)
 			if err != nil {
-				log.Error("Error while rendering", request.Coord, ":", err.Error())
+				Ligneous.Error("Error while rendering", request.Coord, ":", err.Error())
 				result.BlobPNG = nil
 			}
 			request.OutChan <- result
@@ -88,7 +80,7 @@ func NewTileRenderer(stylesheet string) *TileRenderer {
 	t := new(TileRenderer)
 	var err error
 	if err != nil {
-		log.Critical(err)
+		Ligneous.Critical(err)
 	}
 	t.m = mapnik.NewMap(256, 256)
 	t.m.Load(stylesheet)
@@ -139,7 +131,7 @@ func (t *TileRenderer) RenderTileZXY(zoom, x, y uint64) ([]byte, error) {
 
 	blob, err := t.m.RenderToMemoryPng()
 
-	log.Trace(fmt.Sprintf("RENDER BLOB %v %v %v %v", t.s, zoom, x, y))
+	Ligneous.Trace(fmt.Sprintf("RENDER BLOB %v %v %v %v", t.s, zoom, x, y))
 
 	return blob, err
 }
@@ -163,7 +155,7 @@ func (t *TileRenderer) HttpGetTileZXY(zoom, x, y uint64) ([]byte, error) {
 		//.start :: tile request
 		req, err := http.NewRequest("GET", tileUrl, nil)
 		if err != nil {
-			log.Error(err)
+			Ligneous.Error(err)
 		}
 		//req.Header.Set("User-Agent", "Golang_TileServer/1.2")
 		// Look like a web browser running leaflet
@@ -179,7 +171,7 @@ func (t *TileRenderer) HttpGetTileZXY(zoom, x, y uint64) ([]byte, error) {
 				return []byte{}, err
 			}
 
-			log.Trace(fmt.Sprintf("PROXY GET %v %v", tileUrl, resp.StatusCode))
+			Ligneous.Trace(fmt.Sprintf("PROXY GET %v %v", tileUrl, resp.StatusCode))
 
 			if 200 != resp.StatusCode {
 				err := errors.New("Request error: " + string(blob))
@@ -201,7 +193,7 @@ func (t *TileRenderer) HttpGetTileZXY(zoom, x, y uint64) ([]byte, error) {
 	// 	return []byte{}, err
 	// }
 
-	// log.Trace(fmt.Sprintf("PROXY GET %v %v", tileUrl, resp.StatusCode))
+	// Ligneous.Trace(fmt.Sprintf("PROXY GET %v %v", tileUrl, resp.StatusCode))
 
 	// if 200 != resp.StatusCode {
 	// 	err := errors.New("Request error: " + string(blob))
@@ -231,7 +223,7 @@ func (t *TileRenderer) HttpGetTileZXY(zoom, x, y uint64) ([]byte, error) {
 		return []byte{}, err
 	}
 
-	log.Trace(fmt.Sprintf("PROXY GET %v %v", tileUrl, resp.StatusCode))
+	Ligneous.Trace(fmt.Sprintf("PROXY GET %v %v", tileUrl, resp.StatusCode))
 
 	if 200 != resp.StatusCode {
 		err := errors.New("Request error: " + string(blob))

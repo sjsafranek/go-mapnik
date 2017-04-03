@@ -2,16 +2,8 @@ package maptiles
 
 import (
 	"database/sql"
-	log "github.com/cihub/seelog"
 	_ "github.com/lib/pq"
 )
-
-import "ligneous"
-
-func init() {
-	logger, _ := ligneous.InitLogger("PG MBTiles")
-	log.UseLogger(logger)
-}
 
 // MBTiles 1.2-compatible Tile Db with multi-layer support.
 // Was named Mbtiles before, hence the use of *m in methods.
@@ -28,8 +20,8 @@ func NewTileDbPostgresql(path string) *TileDbPostgresql {
 	var err error
 	m.db, err = sql.Open("postgres", path)
 	if err != nil {
-		// logger.Println("Error opening db", err.Error())
-		log.Error(err)
+		// Ligneousger.Println("Error opening db", err.Error())
+		Ligneous.Error(err)
 		return nil
 	}
 	queries := []string{
@@ -69,8 +61,8 @@ func NewTileDbPostgresql(path string) *TileDbPostgresql {
 	for _, query := range queries {
 		_, err = m.db.Exec(query)
 		if err != nil {
-			log.Error("Error setting up db", err.Error())
-			log.Debug(query, "\n")
+			Ligneous.Error("Error setting up db", err.Error())
+			Ligneous.Debug(query, "\n")
 			return nil
 		}
 	}
@@ -87,18 +79,18 @@ func (self *TileDbPostgresql) readLayers() {
 	self.layerIds = make(map[string]int)
 	rows, err := self.db.Query("SELECT rowid, layer_name FROM layers")
 	if err != nil {
-		log.Error("Error fetching layer definitions", err.Error())
+		Ligneous.Error("Error fetching layer definitions", err.Error())
 	}
 	var s string
 	var i int
 	for rows.Next() {
 		if err := rows.Scan(&i, &s); err != nil {
-			log.Error(err)
+			Ligneous.Error(err)
 		}
 		self.layerIds[s] = i
 	}
 	if err := rows.Err(); err != nil {
-		log.Error(err)
+		Ligneous.Error(err)
 	}
 }
 
@@ -107,7 +99,7 @@ func (self *TileDbPostgresql) ensureLayer(layer string) {
 		// queryString := "INSERT OR IGNORE INTO layers(layer_name) VALUES($1)"
 		queryString := "INSERT INTO layers(layer_name) VALUES($1)"
 		if _, err := self.db.Exec(queryString, layer); err != nil {
-			log.Debug(err)
+			Ligneous.Debug(err)
 		}
 		self.readLayers()
 	}
@@ -120,7 +112,7 @@ func (self *TileDbPostgresql) Close() {
 		<-self.qc // block until channel qc is closed (meaning Run() is finished)
 	}
 	if err := self.db.Close(); err != nil {
-		log.Error(err)
+		Ligneous.Error(err)
 	}
 
 }
@@ -158,21 +150,21 @@ func (self *TileDbPostgresql) insert(i TileFetchResult) {
 	case err == sql.ErrNoRows:
 		queryString = "UPDATE tiles SET tile_data=$1 WHERE layer_id=$2 AND zoom_level=$3 AND tile_column=$4 AND tile_row=$5"
 		if _, err = self.db.Exec(queryString, i.BlobPNG, self.layerIds[l], zoom, x, y); err != nil {
-			log.Error("error during insert", err)
+			Ligneous.Error("error during insert", err)
 			return
 		}
-		log.Trace("Insert blob", self.layerIds[l], zoom, x, y)
+		Ligneous.Trace("Insert blob", self.layerIds[l], zoom, x, y)
 	case err != nil:
-		log.Error("error during test", err)
+		Ligneous.Error("error during test", err)
 		return
 	default:
-		log.Trace("Insert blob", self.layerIds[l], zoom, x, y)
+		Ligneous.Trace("Insert blob", self.layerIds[l], zoom, x, y)
 	}
 	self.ensureLayer(l)
 	// queryString = "REPLACE INTO tiles VALUES($1, $2, $3, $4, $5)"
 	queryString = "INSERT INTO tiles VALUES($1, $2, $3, $4, $5)"
 	if _, err = self.db.Exec(queryString, self.layerIds[l], zoom, x, y, i.BlobPNG); err != nil {
-		log.Error(err)
+		Ligneous.Error(err)
 	}
 }
 
@@ -195,10 +187,10 @@ func (self *TileDbPostgresql) fetch(r TileFetchRequest) {
 	case err == sql.ErrNoRows:
 		result.BlobPNG = nil
 	case err != nil:
-		log.Error(err)
+		Ligneous.Error(err)
 	default:
 		result.BlobPNG = blob
-		log.Trace("Reusing blob ", self.layerIds[l], zoom, x, y)
+		Ligneous.Trace("Reusing blob ", self.layerIds[l], zoom, x, y)
 	}
 	r.OutChan <- result
 }

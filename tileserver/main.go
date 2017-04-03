@@ -8,11 +8,8 @@ import (
 	"net/http"
 	"os"
 	"time"
-
-	log "github.com/cihub/seelog"
 )
 
-import "ligneous"
 import "maptiles"
 
 type Config struct {
@@ -30,7 +27,6 @@ var (
 	config_file   string
 	print_version bool
 	version       string = "0.1.4"
-	//logger seelog.LoggerInterface
 )
 
 // Serve a single stylesheet via HTTP. Open view_tileserver.html in your browser
@@ -44,54 +40,32 @@ func TileserverWithCaching(engine string, layer_config map[string]string) {
 		for i := range layer_config {
 			t.AddMapnikLayer(i, layer_config[i])
 		}
-		log.Info("Connecting to postgres database:")
-		log.Info("*** ", config.Cache)
-		log.Info(fmt.Sprintf("Magic happens on port %v...", config.Port))
+		maptiles.Ligneous.Info("Connecting to postgres database:")
+		maptiles.Ligneous.Info("*** ", config.Cache)
+		maptiles.Ligneous.Info(fmt.Sprintf("Magic happens on port %v...", config.Port))
 		srv := &http.Server{
 			Addr:         bind,
 			Handler:      t,
 			ReadTimeout:  5 * time.Second,
 			WriteTimeout: 10 * time.Second,
 		}
-		log.Error(srv.ListenAndServe())
-		//log.Error(http.ListenAndServe(bind, t))
+		maptiles.Ligneous.Error(srv.ListenAndServe())
 	} else {
 		t := maptiles.NewTileServerSqliteMux(config.Cache)
 		for i := range layer_config {
 			t.AddMapnikLayer(i, layer_config[i])
 		}
-		log.Info("Connecting to sqlite3 database:")
-		log.Info("*** ", config.Cache)
-		log.Info(fmt.Sprintf("Magic happens on port %v...", config.Port))
+		maptiles.Ligneous.Info("Connecting to sqlite3 database:")
+		maptiles.Ligneous.Info("*** ", config.Cache)
+		maptiles.Ligneous.Info(fmt.Sprintf("Magic happens on port %v...", config.Port))
 		srv := &http.Server{
 			Addr:         bind,
 			Handler:      t.Router,
 			ReadTimeout:  5 * time.Second,
 			WriteTimeout: 10 * time.Second,
 		}
-		log.Error(srv.ListenAndServe())
-		// log.Error(http.ListenAndServe(bind, t))
-		//log.Error(http.ListenAndServe(bind, t.Router))
+		maptiles.Ligneous.Error(srv.ListenAndServe())
 	}
-	/*
-		else {
-			t := maptiles.NewTileServerSqlite(config.Cache)
-			for i := range layer_config {
-				t.AddMapnikLayer(i, layer_config[i])
-			}
-			log.Info("Connecting to sqlite3 database:")
-			log.Info("*** ", config.Cache)
-			log.Info(fmt.Sprintf("Magic happens on port %v...", config.Port))
-			srv := &http.Server{
-				Addr:         bind,
-				Handler:      t,
-				ReadTimeout:  5 * time.Second,
-				WriteTimeout: 10 * time.Second,
-			}
-			log.Error(srv.ListenAndServe())
-			//log.Error(http.ListenAndServe(bind, t.Mux))
-		}
-	*/
 }
 
 func init() {
@@ -108,17 +82,9 @@ func init() {
 	// 	}
 	// }
 	if print_version {
-		fmt.Println("TileServer", version)
+		fmt.Println("MapnikServer", version)
 		os.Exit(1)
 	}
-
-	logger, err := ligneous.InitLogger("TileServer")
-	if nil != err {
-		fmt.Println("Error starting logging")
-		os.Exit(1)
-	}
-	log.UseLogger(logger)
-
 }
 
 func getConfig() {
@@ -143,7 +109,7 @@ func getConfig() {
 			}
 		}
 
-		log.Debug(config)
+		maptiles.Ligneous.Debug(config)
 	} else {
 		fmt.Println("Config file not found")
 		os.Exit(1)
