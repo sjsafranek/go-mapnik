@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// TileServerSqliteMux SQLite3 tile server.
 // Handles HTTP requests for map tiles, caching any produced tiles
 // in an MBtiles 1.2 compatible sqlite db.
 type TileServerSqliteMux struct {
@@ -22,6 +23,7 @@ type TileServerSqliteMux struct {
 	Router    *mux.Router
 }
 
+// NewTileServerSqliteMux creates TileServerSqliteMux object.
 func NewTileServerSqliteMux(cacheFile string) *TileServerSqliteMux {
 	t := TileServerSqliteMux{}
 	t.lmp = NewLayerMultiplex()
@@ -39,10 +41,12 @@ func NewTileServerSqliteMux(cacheFile string) *TileServerSqliteMux {
 	return &t
 }
 
+// AddMapnikLayer adds mapnik layer to server.
 func (self *TileServerSqliteMux) AddMapnikLayer(layerName string, stylesheet string) {
 	self.lmp.AddRenderer(layerName, stylesheet)
 }
 
+// ServeTileRequest serves tile request.
 func (self *TileServerSqliteMux) ServeTileRequest(w http.ResponseWriter, r *http.Request) {
 
 	start := time.Now()
@@ -75,10 +79,6 @@ func (self *TileServerSqliteMux) ServeTileRequest(w http.ResponseWriter, r *http
 		needsInsert = true
 	}
 
-	// upgrade go1.7
-	//Ligneous.Info(len(r.Cancel))
-	//Ligneous.Info(r.Context())
-
 	w.Header().Set("Content-Type", "image/png")
 	w.WriteHeader(http.StatusOK)
 
@@ -91,86 +91,53 @@ func (self *TileServerSqliteMux) ServeTileRequest(w http.ResponseWriter, r *http
 	}
 
 	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
-
 }
 
+// RequestErrorHandler handles error response.
 func (self *TileServerSqliteMux) RequestErrorHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	response := make(map[string]interface{})
 	response["status"] = "error"
 	result := make(map[string]interface{})
 	result["message"] = "Expecting /{datasource}/{z}/{x}/{y}.png"
 	response["data"] = result
-	js, err := json.Marshal(response)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Write(js)
+	SendJsonResponseFromInterface(w, r, response)
 	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
+// IndexHandler for server.
 func (self *TileServerSqliteMux) IndexHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	response := make(map[string]interface{})
-	response["status"] = "ok"
-	result := make(map[string]interface{})
-	result["message"] = "Hello there ladies and gentlemen!"
-	response["data"] = result
-	js, err := json.Marshal(response)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Write(js)
+	fmt.Fprintf(w, "MapnikServer\nHello there ladies and gentlemen!")
 	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
+// MetadataHandler for tile server.
 func (self *TileServerSqliteMux) MetadataHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	metadata := self.m.MetaDataHandler()
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	response := make(map[string]interface{})
 	response["status"] = "ok"
 	response["data"] = metadata
-	js, err := json.Marshal(response)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Write(js)
+	SendJsonResponseFromInterface(w, r, response)
 	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 // PingHandler provides an api route for server health check
 func (self *TileServerSqliteMux) PingHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	response := make(map[string]interface{})
 	response["status"] = "ok"
 	result := make(map[string]interface{})
 	result["result"] = "Pong"
 	response["data"] = result
-	js, err := json.Marshal(response)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Write(js)
+	SendJsonResponseFromInterface(w, r, response)
 	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
-// ServerProfile returns basic server stats
-func (self *TileServerSqliteMux) ServerHandler(w http.ResponseWriter, r *http.Request) {
+// ServerProfileHandler returns basic server stats.
+func (self *TileServerSqliteMux) ServerProfileHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var data map[string]interface{}
 	data = make(map[string]interface{})
 	data["registered"] = self.startTime.UTC()
@@ -179,20 +146,13 @@ func (self *TileServerSqliteMux) ServerHandler(w http.ResponseWriter, r *http.Re
 	response := make(map[string]interface{})
 	response["status"] = "ok"
 	response["data"] = data
-	// data["free_mem"] = runtime.MemStats()
-	js, err := json.Marshal(response)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Write(js)
+	SendJsonResponseFromInterface(w, r, response)
 	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
+// TileLayersHandler returns list of tiles.
 func (self *TileServerSqliteMux) TileLayersHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var keys []string
 	for k := range self.lmp.layerChans {
 		keys = append(keys, k)
@@ -201,11 +161,6 @@ func (self *TileServerSqliteMux) TileLayersHandler(w http.ResponseWriter, r *htt
 	response = make(map[string]interface{})
 	response["status"] = "ok"
 	response["data"] = keys
-	js, err := json.Marshal(response)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Write(js)
+	SendJsonResponseFromInterface(w, r, response)
 	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }

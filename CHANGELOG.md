@@ -7,6 +7,7 @@ Change Log
 
 ## [0.1.4] - 2017-04-03
 ### Changed
+ - gorilla mux used for postgresql and sqlite3 servers
  - Postgres descriptions to table and fields
  - Updated Makefile
 
