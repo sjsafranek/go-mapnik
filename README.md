@@ -26,7 +26,7 @@ $ psql
 
 #### Check setup
 $ sudo -i -u mapnik
-$ psql -d mbtiles -U mapnik -W dev
+$ psql -d mbtiles -U mapnik
 
 
 ### Run with PostgreSQL
