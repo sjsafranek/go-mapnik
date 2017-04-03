@@ -52,9 +52,11 @@ func TileserverWithCaching(engine string, layer_config map[string]string) {
 		}
 		maptiles.Ligneous.Error(srv.ListenAndServe())
 	} else {
+		//maptiles.Ligneous.Info(layer_config)
 		t := maptiles.NewTileServerSqliteMux(config.Cache)
 		for i := range layer_config {
-			t.AddMapnikLayer(i, layer_config[i])
+			maptiles.Ligneous.Info(i, layer_config[i])
+			//t.AddMapnikLayer(i, layer_config[i])
 		}
 		maptiles.Ligneous.Info("Connecting to sqlite3 database:")
 		maptiles.Ligneous.Info("*** ", config.Cache)

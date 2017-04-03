@@ -2,11 +2,8 @@
 	"cache": "tilecache.mbtiles",
 	"engine": "sqlite",
 	"layers": {
-		"default": "sampledata/world/stylesheet.xml",
-		"sample": "sampledata/world/stylesheet.xml",
-		"population": "sampledata/world_population/population.xml",
-		"osmORIGINAL": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-		"osm_load_balancer": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+		"world": "sampledata/world/stylesheet.xml",
+        "population": "sampledata/world_population/population.xml",
 		"osm": "http://tile.openstreetmap.org/{z}/{x}/{y}.png"
 	},
 	"port": 8080

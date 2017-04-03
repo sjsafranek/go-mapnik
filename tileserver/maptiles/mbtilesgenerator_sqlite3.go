@@ -30,16 +30,16 @@ func NewTileDbSqlite(path string) *TileDbSqlite3 {
 	queries := []string{
 		"PRAGMA journal_mode = OFF",
 		"CREATE TABLE IF NOT EXISTS layers(layer_name TEXT PRIMARY KEY NOT NULL)",
-		"CREATE TABLE IF NOT EXISTS metadata (name TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL)",
+		"CREATE TABLE IF NOT EXISTS metadata (name TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL, layer_name TEXT NOT NULL)",
 		"CREATE TABLE IF NOT EXISTS tiles (layer_id INTEGER, zoom_level INTEGER, tile_column INTEGER, tile_row INTEGER, tile_data blob, PRIMARY KEY (layer_id, zoom_level, tile_column, tile_row))",
-		"REPLACE INTO metadata VALUES('name', 'go-mapnik cache file')",
-		"REPLACE INTO metadata VALUES('type', 'overlay')", //baselayer
-		"REPLACE INTO metadata VALUES('version', '1')",
-		"REPLACE INTO metadata VALUES('description', 'Compatible with MBTiles spec 1.2. However, this file may contain multiple overlay layers, but only the layer called default is exported as MBtiles')",
-		"REPLACE INTO metadata VALUES('format', 'png')",
-		"REPLACE INTO metadata VALUES('bounds', '-180.0,-85,180,85')",
-		"REPLACE INTO metadata VALUES('attribution', 'sjsafranek')",
-		"INSERT OR IGNORE INTO layers(layer_name) VALUES('default')",
+		// "REPLACE INTO metadata VALUES('name', 'go-mapnik cache file')",
+		// "REPLACE INTO metadata VALUES('type', 'overlay')", //baselayer
+		// "REPLACE INTO metadata VALUES('version', '1')",
+		// "REPLACE INTO metadata VALUES('description', 'Compatible with MBTiles spec 1.2. However, this file may contain multiple overlay layers, but only the layer called default is exported as MBtiles')",
+		// "REPLACE INTO metadata VALUES('format', 'png')",
+		// "REPLACE INTO metadata VALUES('bounds', '-180.0,-85,180,85')",
+		// "REPLACE INTO metadata VALUES('attribution', 'sjsafranek')",
+		// "INSERT OR IGNORE INTO layers(layer_name) VALUES('default')",
 	}
 
 	for _, query := range queries {
