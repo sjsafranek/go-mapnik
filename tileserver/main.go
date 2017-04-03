@@ -45,8 +45,7 @@ func TileserverWithCaching(engine string, layer_config map[string]string) {
 		maptiles.Ligneous.Info("*** ", config.Cache)
 		maptiles.Ligneous.Info(fmt.Sprintf("Magic happens on port %v...", config.Port))
 		srv := &http.Server{
-			Addr: bind,
-			//Handler:      t,
+			Addr:         bind,
 			Handler:      t.Router,
 			ReadTimeout:  5 * time.Second,
 			WriteTimeout: 10 * time.Second,

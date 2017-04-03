@@ -1,3 +1,7 @@
+[![GoDoc](https://godoc.org/github.com/sjsafranek/go-mapnik?status.png)](https://godoc.org/github.com/sjsafranek/go-mapnik)
+[![Go Report Card](https://goreportcard.com/badge/github.com/sjsafranek/go-mapnik)](https://goreportcard.com/report/github.com/sjsafranek/go-mapnik)
+[![Version 0.1.4](https://img.shields.io/badge/version-1.4-brightgreen.svg)](http://sjsafranek.github.io/go-mapnik)
+
 go-mapnik
 =========
 

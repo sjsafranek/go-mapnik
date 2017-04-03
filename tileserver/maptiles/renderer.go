@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"strings"
 	"time"
@@ -12,35 +11,36 @@ import (
 
 import "mapnik"
 
+// ProxyClient http client for server proxy tile layers.
 var ProxyClient = &http.Client{
 	Timeout: time.Second * 30,
 }
 
-func randomNum(min, max int) int {
-	rand.Seed(time.Now().Unix())
-	return rand.Intn(max-min) + min
-}
-
+// TileCoord struct for tile requests.
 type TileCoord struct {
 	X, Y, Zoom uint64
 	Tms        bool
 	Layer      string
 }
 
+// OSMFilename formats png filename.
 func (c TileCoord) OSMFilename() string {
 	return fmt.Sprintf("%d/%d/%d.png", c.Zoom, c.X, c.Y)
 }
 
+// TileFetchResult struct for tile result.
 type TileFetchResult struct {
 	Coord   TileCoord
 	BlobPNG []byte
 }
 
+// TileFetchRequest struct for tile request.
 type TileFetchRequest struct {
 	Coord   TileCoord
 	OutChan chan<- TileFetchResult
 }
 
+// setTMS sets Tmns to signal server proxy tile layer.
 func (c *TileCoord) setTMS(tms bool) {
 	if c.Tms != tms {
 		c.Y = (1 << c.Zoom) - c.Y - 1
@@ -48,6 +48,7 @@ func (c *TileCoord) setTMS(tms bool) {
 	}
 }
 
+// NewTileRendererChan creates channel for tile rendering
 func NewTileRendererChan(stylesheet string) chan<- TileFetchRequest {
 	c := make(chan TileFetchRequest)
 
@@ -68,7 +69,7 @@ func NewTileRendererChan(stylesheet string) chan<- TileFetchRequest {
 	return c
 }
 
-// Renders images as Web Mercator tiles
+// TileRenderer renders images as Web Mercator tiles.
 type TileRenderer struct {
 	m     *mapnik.Map
 	mp    mapnik.Projection
@@ -76,6 +77,7 @@ type TileRenderer struct {
 	s     string
 }
 
+// NewTileRenderer creates TileRenderer struct.
 func NewTileRenderer(stylesheet string) *TileRenderer {
 	t := new(TileRenderer)
 	var err error
@@ -97,6 +99,7 @@ func NewTileRenderer(stylesheet string) *TileRenderer {
 	return t
 }
 
+// RenderTile renders map tile.
 func (t *TileRenderer) RenderTile(c TileCoord) ([]byte, error) {
 	c.setTMS(false)
 	if t.proxy {
@@ -106,6 +109,7 @@ func (t *TileRenderer) RenderTile(c TileCoord) ([]byte, error) {
 	}
 }
 
+// RenderTileZXY renders map tile.
 // Render a tile with coordinates in Google tile format.
 // Most upper left tile is always 0,0. Method is not thread-safe,
 // so wrap with a mutex when accessing the same renderer by multiple
@@ -136,12 +140,14 @@ func (t *TileRenderer) RenderTileZXY(zoom, x, y uint64) ([]byte, error) {
 	return blob, err
 }
 
+// subDomain selects random sub domain for proxy tile server.
 func (t *TileRenderer) subDomain() string {
 	subs := []string{"a", "b", "c"}
-	n := randomNum(0, 3)
+	n := RandomIntBetween(0, 3)
 	return subs[n]
 }
 
+// HttpGetTileZXY gets map tile another tile server.
 func (t *TileRenderer) HttpGetTileZXY(zoom, x, y uint64) ([]byte, error) {
 	tileUrl := strings.Replace(t.s, "{z}", fmt.Sprintf("%v", zoom), -1)
 	tileUrl = strings.Replace(tileUrl, "{x}", fmt.Sprintf("%v", x), -1)
@@ -186,53 +192,4 @@ func (t *TileRenderer) HttpGetTileZXY(zoom, x, y uint64) ([]byte, error) {
 			return []byte{}, err
 		}
 	}
-
-	// blob, err := ioutil.ReadAll(resp.Body)
-	// resp.Body.Close()
-	// if nil != err {
-	// 	return []byte{}, err
-	// }
-
-	// Ligneous.Trace(fmt.Sprintf("PROXY GET %v %v", tileUrl, resp.StatusCode))
-
-	// if 200 != resp.StatusCode {
-	// 	err := errors.New("Request error: " + string(blob))
-	// 	return []byte{}, err
-	// }
-
-	// return blob, err
 }
-
-/*
-func (t *TileRenderer) HttpGetTileZXY(zoom, x, y uint64) ([]byte, error) {
-	tileUrl := strings.Replace(t.s, "{z}", fmt.Sprintf("%v", zoom), -1)
-	tileUrl = strings.Replace(tileUrl, "{x}", fmt.Sprintf("%v", x), -1)
-	tileUrl = strings.Replace(tileUrl, "{y}", fmt.Sprintf("%v", y), -1)
-	tileUrl = strings.Replace(tileUrl, "{s}", t.subDomain(), -1)
-
-	// resp, err := http.Get(tileUrl)
-
-	resp, err := ProxyClient.Get(tileUrl)
-	if nil != err {
-		return []byte{}, err
-	}
-
-	blob, err := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
-	if nil != err {
-		return []byte{}, err
-	}
-
-	Ligneous.Trace(fmt.Sprintf("PROXY GET %v %v", tileUrl, resp.StatusCode))
-
-	if 200 != resp.StatusCode {
-		err := errors.New("Request error: " + string(blob))
-		return []byte{}, err
-	}
-
-	return blob, err
-}
-*/
-
-//func (t *TileRenderer) HttpGetTile(url string) ([]byte, error) {/
-//(resp *http.Response, err error)

@@ -1,7 +1,6 @@
 package maptiles
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"runtime"
@@ -33,7 +32,7 @@ func NewTileServerSqliteMux(cacheFile string) *TileServerSqliteMux {
 	t.Router = mux.NewRouter()
 	t.Router.HandleFunc("/", t.IndexHandler).Methods("GET")
 	t.Router.HandleFunc("/ping", t.PingHandler).Methods("GET")
-	t.Router.HandleFunc("/server", t.ServerHandler).Methods("GET")
+	t.Router.HandleFunc("/server", t.ServerProfileHandler).Methods("GET")
 	t.Router.HandleFunc("/metadata", t.MetadataHandler).Methods("GET")
 	t.Router.HandleFunc("/tilelayers", t.TileLayersHandler).Methods("GET")
 	t.Router.HandleFunc("/{lyr}/{z:[0-9]+}/{x:[0-9]+}/{y:[0-9]+}.png", t.ServeTileRequest).Methods("GET")

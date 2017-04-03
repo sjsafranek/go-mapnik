@@ -1,7 +1,6 @@
 package maptiles
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"runtime"
@@ -33,7 +32,7 @@ func NewTileServerPostgresMux(cacheFile string) *TileServerPostgresMux {
 	t.Router = mux.NewRouter()
 	t.Router.HandleFunc("/", t.IndexHandler).Methods("GET")
 	t.Router.HandleFunc("/ping", t.PingHandler).Methods("GET")
-	t.Router.HandleFunc("/server", t.ServerHandler).Methods("GET")
+	t.Router.HandleFunc("/server", t.ServerProfileHandler).Methods("GET")
 	t.Router.HandleFunc("/metadata", t.MetadataHandler).Methods("GET")
 	t.Router.HandleFunc("/tilelayers", t.TileLayersHandler).Methods("GET")
 	t.Router.HandleFunc("/{lyr}/{z:[0-9]+}/{x:[0-9]+}/{y:[0-9]+}.png", t.ServeTileRequest).Methods("GET")
@@ -136,7 +135,7 @@ func (self *TileServerPostgresMux) PingHandler(w http.ResponseWriter, r *http.Re
 }
 
 // ServerProfileHandler returns basic server stats.
-func (self *TileServerPostgresMux) ServerHandler(w http.ResponseWriter, r *http.Request) {
+func (self *TileServerPostgresMux) ServerProfileHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	var data map[string]interface{}
 	data = make(map[string]interface{})
