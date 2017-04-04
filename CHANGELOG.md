@@ -11,8 +11,6 @@ Change Log
  - merged duplicated functions for easier testing and debugging
  - logging reports server name and version
 
-
-
 ## [0.1.4] - 2017-04-03
 ### Added
  - Commenting for documentation

@@ -81,7 +81,7 @@ func init() {
 	// 	}
 	// }
 	if print_version {
-		fmt.Println(maptiles.SERVER_NAME+"-"+maptiles.VERSION)
+		fmt.Println(maptiles.SERVER_NAME + "-" + maptiles.VERSION)
 		os.Exit(1)
 	}
 }

@@ -28,5 +28,9 @@ func SimpleExample(map_file string) {
 }
 
 func main() {
+	// lower left x & y
+	// upper right x & y
+	// height
+	// width
 	SimpleExample("sampledata/world_population/population.xml")
 }
