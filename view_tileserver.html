@@ -25,7 +25,7 @@
 		// createTileLayer creates leaflet tilelayer from url
 		function createTileLayer(url) {
 			return L.tileLayer(url, {
-				attribution: '&cospy; <a href="https://github.com/sjsafranek/go-mapnik"> Go-Mapnik </a>',
+				attribution: '&copy; <a href="https://github.com/sjsafranek/go-mapnik" target="_blank"> Go-Mapnik </a>',
 				reuseTiles: true
 			});
 		}
@@ -34,7 +34,7 @@
 
 			baseLayers = {
 				"OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-					attribution: '&cospy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors | <a href="https://mapicons.mapsmarker.com">Maps Icons Collection</a>',
+					attribution: '&copy; <a href="http://osm.org/copyright" target="_blank">OpenStreetMap</a> contributors',
 					reuseTiles: true
 				})
 			}
