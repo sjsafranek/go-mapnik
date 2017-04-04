@@ -3,7 +3,6 @@ package maptiles
 import (
 	"fmt"
 	"net/http"
-	"runtime"
 	"strconv"
 	"time"
 
@@ -100,29 +99,18 @@ func (self *TileServerPostgresMux) ServeTileRequest(w http.ResponseWriter, r *ht
 // IndexHandler for server.
 func (self *TileServerPostgresMux) IndexHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	var root = `<?xml version="1.0" encoding="utf-8" ?>
-				 <Services>
-				 	<TileMapService title="GoMapnik Tile Map Service" version="1.0" href="http:127.0.0.1/tms/1.0"/>
-				 </Services>`
-	fmt.Fprintf(w, root)
+	TMSRootHandler(w, r)
 	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 // TMSTileMaps lists available TileMaps
 func (self *TileServerPostgresMux) TMSTileMaps(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	var TileMaps = ``
+	var layers []string
 	for k := range self.lmp.layerChans {
-		TileMaps += `<TileMap title="` + k + `" srs="EPSG:4326" href="http:127.0.0.1:8080` + r.URL.Path + `/` + k + `"></TileMap>`
+		layers = append(layers, k)
 	}
-	var tree = `<?xml version="1.0" encoding="utf-8" ?>
-				 <TileMapService version="1.0" services="http:127.0.0.1:8080` + r.URL.Path + `">
-				 	<Abstract></Abstract>
-					<TileMaps>
-						` + TileMaps + `
-					</TileMaps>
-				 </TileMapService>`
-	fmt.Fprintf(w, tree)
+	TMSTileMaps(layers, w, r)
 	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
@@ -131,76 +119,45 @@ func (self *TileServerPostgresMux) TMSTileMap(w http.ResponseWriter, r *http.Req
 	start := time.Now()
 	vars := mux.Vars(r)
 	lyr := vars["lyr"]
-	// metadata := self.m.MetaDataHandler(lyr)
-	var TileSets = ``
-	for i := 0; i < 21; i++ {
-		TileSets += `<TileSet
-						href="` + fmt.Sprintf("http:127.0.0.1:8080%v/%v", r.URL.Path, i) + `"
-						units-per-pixel="` + fmt.Sprintf("%v", unitsPerPixel(i)) + `"
-						order="` + fmt.Sprintf("%v", i) + `">
-					</TileSet>`
+	if _, ok := self.lmp.layerChans[lyr]; !ok {
+		http.Error(w, "layer not found", http.StatusNotFound)
+	} else {
+		TMSTileMap(lyr, w, r)
 	}
-	var tree = `<?xml version="1.0" encoding="utf-8" ?>
-				 <TileMap version="1.0" services="http:127.0.0.1:8080` + r.URL.Path + `">
-				 	<Title>` + lyr + `</Title>
-					<Abstract></Abstract>
-					<SRS>EPSG:4326</SRS>
-					<BoundingBox minx="-180" miny="-90" maxx="180" max="90"></BoundingBox>
-					<Origin x="-180" y="-90"></Origin>
-					<TileFormat width="256" height="256" mime-type="image/png" extension="png"></TileFormat>
-					<TileSets profile="global-geodetic">
-						` + TileSets + `
-					</TileSets>
-				 </TileMap>`
-	fmt.Fprintf(w, tree)
 	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 // TMSErrorTile returns error response
 func (self *TileServerPostgresMux) TMSErrorTile(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	message := "Expecting /{layer}/{z}/{x}/{y}.png"
-	http.Error(w, message, http.StatusBadRequest)
+	http.Error(w, "Expecting /{layer}/{z}/{x}/{y}.png", http.StatusBadRequest)
 	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
-// MetadataHandler for tile server.
-func (self *TileServerPostgresMux) MetadataHandler(w http.ResponseWriter, r *http.Request) {
-	start := time.Now()
-	vars := mux.Vars(r)
-	lyr := vars["lyr"]
-	metadata := self.m.MetaDataHandler(lyr)
-	response := make(map[string]interface{})
-	response["status"] = "ok"
-	response["data"] = metadata
-	SendJsonResponseFromInterface(w, r, response)
-	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
-}
+// // MetadataHandler for tile server.
+// func (self *TileServerPostgresMux) MetadataHandler(w http.ResponseWriter, r *http.Request) {
+// 	start := time.Now()
+// 	vars := mux.Vars(r)
+// 	lyr := vars["lyr"]
+// 	metadata := self.m.MetaDataHandler(lyr)
+// 	response := make(map[string]interface{})
+// 	response["status"] = "ok"
+// 	response["data"] = metadata
+// 	SendJsonResponseFromInterface(w, r, response)
+// 	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+// }
 
 // PingHandler provides an api route for server health check
 func (self *TileServerPostgresMux) PingHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	response := make(map[string]interface{})
-	response["status"] = "ok"
-	result := make(map[string]interface{})
-	result["result"] = "Pong"
-	response["data"] = result
-	SendJsonResponseFromInterface(w, r, response)
+	PingHandler(w, r)
 	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 // ServerProfileHandler returns basic server stats.
 func (self *TileServerPostgresMux) ServerProfileHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	var data map[string]interface{}
-	data = make(map[string]interface{})
-	data["registered"] = self.startTime.UTC()
-	data["uptime"] = time.Since(self.startTime).Seconds()
-	data["num_cores"] = runtime.NumCPU()
-	response := make(map[string]interface{})
-	response["status"] = "ok"
-	response["data"] = data
-	SendJsonResponseFromInterface(w, r, response)
+	ServerProfileHandler(self.startTime, w, r)
 	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
