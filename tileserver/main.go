@@ -36,7 +36,6 @@ var (
 func TileserverWithCaching(engine string, layer_config map[string]string) {
 	bind := fmt.Sprintf("0.0.0.0:%v", config.Port)
 	if engine == "postgres" {
-		//t := maptiles.NewTileServerPostgres(config.Cache)
 		t := maptiles.NewTileServerPostgresMux(config.Cache)
 		for i := range layer_config {
 			t.AddMapnikLayer(i, layer_config[i])
@@ -52,11 +51,9 @@ func TileserverWithCaching(engine string, layer_config map[string]string) {
 		}
 		maptiles.Ligneous.Error(srv.ListenAndServe())
 	} else {
-		//maptiles.Ligneous.Info(layer_config)
 		t := maptiles.NewTileServerSqliteMux(config.Cache)
 		for i := range layer_config {
-			maptiles.Ligneous.Info(i, layer_config[i])
-			//t.AddMapnikLayer(i, layer_config[i])
+			t.AddMapnikLayer(i, layer_config[i])
 		}
 		maptiles.Ligneous.Info("Connecting to sqlite3 database:")
 		maptiles.Ligneous.Info("*** ", config.Cache)
