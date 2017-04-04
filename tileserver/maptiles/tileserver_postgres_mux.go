@@ -42,6 +42,7 @@ func NewTileServerPostgresMux(cacheFile string) *TileServerPostgresMux {
 
 // AddMapnikLayer adds mapnik layer to server.
 func (self *TileServerPostgresMux) AddMapnikLayer(layerName string, stylesheet string) {
+	self.m.AddLayerMetadata(layerName, stylesheet)
 	self.lmp.AddRenderer(layerName, stylesheet)
 }
 

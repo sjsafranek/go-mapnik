@@ -42,6 +42,7 @@ func NewTileServerSqliteMux(cacheFile string) *TileServerSqliteMux {
 
 // AddMapnikLayer adds mapnik layer to server.
 func (self *TileServerSqliteMux) AddMapnikLayer(layerName string, stylesheet string) {
+	self.m.AddLayerMetadata(layerName, stylesheet)
 	self.lmp.AddRenderer(layerName, stylesheet)
 }
 

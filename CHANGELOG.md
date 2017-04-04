@@ -8,10 +8,13 @@ Change Log
 ## [0.1.4] - 2017-04-03
 ### Added
  - Commenting for documentation
+ - metadata route for each layer
 ### Changed
  - gorilla mux used for postgresql and sqlite3 servers
  - Postgres descriptions to table and fields
  - Updated Makefile
+### Fixed
+ - metadata table support for multiple tile layers
 
 ## [0.1.3] - 2017-12-01
 ### Added

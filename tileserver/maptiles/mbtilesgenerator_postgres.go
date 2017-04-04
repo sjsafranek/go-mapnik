@@ -35,7 +35,7 @@ func NewTileDbPostgresql(path string) *TileDbPostgresql {
 		"COMMENT ON COLUMN layers.rowid IS 'Tile layer index';",
 
 		// Table: metadata
-		"CREATE TABLE IF NOT EXISTS metadata (name TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL, layer_name TEXT NOT NULL);",
+		"CREATE TABLE IF NOT EXISTS metadata (name TEXT NOT NULL, value TEXT NOT NULL, layer_name TEXT NOT NULL);",
 		"COMMENT ON TABLE metadata IS 'Metadata for tile server layers';",
 		"COMMENT ON COLUMN metadata.name IS 'metadata map name';",
 		"COMMENT ON COLUMN metadata.value IS 'metadata map value';",
@@ -49,16 +49,6 @@ func NewTileDbPostgresql(path string) *TileDbPostgresql {
 		"COMMENT ON COLUMN tiles.tile_column IS 'png tile column';",
 		"COMMENT ON COLUMN tiles.tile_row IS 'png tile row';",
 		"COMMENT ON COLUMN tiles.tile_data IS 'png tile data';",
-
-		// "INSERT INTO metadata(name,value,layer_name) VALUES('name', 'go-mapnik cache file', 'default')",
-		// "INSERT INTO metadata(name,value,layer_name) VALUES('type', 'overlay', 'default')", //baselayer
-		// "INSERT INTO metadata(name,value,layer_name) VALUES('version', '1', 'default')",
-		// "INSERT INTO metadata(name,value,layer_name) VALUES('description', 'Compatible with MBTiles spec 1.2. However, this file may contain multiple overlay layers, but only the layer called default is exported as MBtiles', 'default')",
-		// "INSERT INTO metadata(name,value,layer_name) VALUES('format', 'png', 'default')",
-		// "INSERT INTO metadata(name,value,layer_name) VALUES('bounds', '-180.0,-85,180,85', 'default')",
-		// "INSERT INTO metadata(name,value,layer_name) VALUES('attribution', 'sjsafranek', 'default')",
-		// "INSERT INTO layers(layer_name) SELECT 'default' WHERE NOT EXISTS (SELECT layer_name FROM layers WHERE layer_name='default');",
-		// "INSERT INTO layers(layer_name) VALUES ('default')",
 	}
 
 	for _, query := range queries {
@@ -205,9 +195,51 @@ func (self *TileDbPostgresql) fetch(r TileFetchRequest) {
 	r.OutChan <- result
 }
 
+// AddLayerMetadata adds metadata t0 metadata table
+func (self *TileDbPostgresql) AddLayerMetadata(lyr string, stylesheet string) {
+
+	check_query := "SELECT EXISTS(SELECT * FROM metadata WHERE name='name' AND layer_name='" + lyr + "')"
+
+	insert_queries := []string{
+		"INSERT INTO metadata(name, value, layer_name) VALUES('name', '" + lyr + "', '" + lyr + "')",
+		"INSERT INTO metadata(name, value, layer_name) VALUES('source', '" + stylesheet + "', '" + lyr + "')",
+		"INSERT INTO metadata(name, value, layer_name) VALUES('type', 'overlay', '" + lyr + "')",
+		"INSERT INTO metadata(name,value,layer_name) VALUES('version', '1', '" + lyr + "')",
+		"INSERT INTO metadata(name,value,layer_name) VALUES('description', 'Compatible with MBTiles spec 1.2.', '" + lyr + "')",
+		"INSERT INTO metadata(name,value,layer_name) VALUES('format', 'png', '" + lyr + "')",
+		"INSERT INTO metadata(name,value,layer_name) VALUES('bounds', '-180.0,-85,180,85', '" + lyr + "')",
+		"INSERT INTO metadata(name,value,layer_name) VALUES('attribution', 'sjsafranek', '" + lyr + "')",
+	}
+
+	if !self.rowExists(check_query) {
+		Ligneous.Info("Adding metadata for ", lyr)
+		for _, query := range insert_queries {
+			_, err := self.db.Exec(query)
+			if err != nil {
+				Ligneous.Error("Error adding metadata to db", err.Error())
+				Ligneous.Debug(query, "\n")
+			}
+		}
+	}
+
+}
+
+// rowExists checks if row exists in table
+func (self *TileDbPostgresql) rowExists(query string) bool {
+	var exists bool
+	err := self.db.QueryRow(query).Scan(&exists)
+	if nil != err {
+		Ligneous.Error(err)
+	}
+	return exists
+}
+
 // MetaDataHandler gets metadata from database.
 func (self *TileDbPostgresql) MetaDataHandler(lyr string) map[string]string {
-	rows, _ := self.db.Query("SELECT * FROM metadata WHERE layer_name=$1", lyr)
+	rows, err := self.db.Query("SELECT name, value FROM metadata WHERE layer_name=$1", lyr)
+	if nil != err {
+		Ligneous.Error(err)
+	}
 	metadata := make(map[string]string)
 	for rows.Next() {
 		var name string
