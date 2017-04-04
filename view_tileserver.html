@@ -20,7 +20,7 @@
 
 		var map,
 			baseLayers;
-		var server = 'http://localhost:8080/tms/1.0';
+		var server = 'http://localhost:8080';
 
 		// createTileLayer creates leaflet tilelayer from url
 		function createTileLayer(url) {
@@ -55,7 +55,7 @@
 					// Create tilelayer urls and add them to `baseLayers`.
 					for (var i in result.data) {
 						var name = result.data[i];
-						var url  = server + '/' + name + '/{z}/{x}/{y}.png';
+						var url  = server + '/tms/1.0/' + name + '/{z}/{x}/{y}.png';
 						baseLayers[name] = createTileLayer(url);
 					}
 
