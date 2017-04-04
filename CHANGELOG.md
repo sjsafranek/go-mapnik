@@ -9,6 +9,7 @@ Change Log
  - Global variables
 ### Changed
  - merged duplicated functions for easier testing and debugging
+ - logging reports server name and version
 
 
 

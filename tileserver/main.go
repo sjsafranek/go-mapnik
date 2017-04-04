@@ -26,7 +26,6 @@ var (
 	// db_cache string
 	config_file   string
 	print_version bool
-	version       string = "0.1.4"
 )
 
 // Serve a single stylesheet via HTTP. Open view_tileserver.html in your browser
@@ -82,7 +81,7 @@ func init() {
 	// 	}
 	// }
 	if print_version {
-		fmt.Println("MapnikServer", version)
+		fmt.Println(maptiles.SERVER_NAME, "-", maptiles.VERSION)
 		os.Exit(1)
 	}
 }

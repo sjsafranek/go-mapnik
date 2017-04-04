@@ -11,6 +11,10 @@ var (
 	LogLevel     string = "trace"
 )
 
+const (
+	LOGGING_NAME string = SERVER_NAME + `-` + VERSION
+)
+
 func loadLoggingConfig() {
 	// https://github.com/cihub/seelog/wiki/Log-levels
 	appConfig := `
@@ -26,8 +30,8 @@ func loadLoggingConfig() {
         </filter>
     </outputs>
     <formats>
-        <format id="common"   format="[` + SERVER_NAME + `] %UTCDate %UTCTime [%LEVEL] %File %FuncShort:%Line %Msg %n" />
-        <format id="stdout"   format="[` + SERVER_NAME + `] %UTCDate %UTCTime [%LEVEL] %File %FuncShort:%Line %Msg %n" />
+        <format id="common"   format="[` + LOGGING_NAME + `] %UTCDate %UTCTime [%LEVEL] %File %FuncShort:%Line %Msg %n" />
+        <format id="stdout"   format="[` + LOGGING_NAME + `] %UTCDate %UTCTime [%LEVEL] %File %FuncShort:%Line %Msg %n" />
     </formats>
 </seelog>
 `
