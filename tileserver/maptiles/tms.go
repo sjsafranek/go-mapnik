@@ -28,7 +28,7 @@ func TMSTileMaps(lyrs []string, w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, tree)
 }
 
-func TMSTileMap(lyr string, w http.ResponseWriter, r *http.Request) {
+func TMSTileMap(lyr string, source string, w http.ResponseWriter, r *http.Request) {
 	var TileSets = ``
 	for i := 0; i < 21; i++ {
 		TileSets += `<TileSet
@@ -40,6 +40,7 @@ func TMSTileMap(lyr string, w http.ResponseWriter, r *http.Request) {
 	var tree = `<?xml version="1.0" encoding="utf-8" ?>
 				 <TileMap version="1.0" services="http:127.0.0.1:8080` + r.URL.Path + `">
 				 	<Title>` + lyr + `</Title>
+                    <Source>` + source + `</Source>
 					<Abstract></Abstract>
 					<SRS>EPSG:4326</SRS>
 					<BoundingBox minx="-180" miny="-90" maxx="180" max="90"></BoundingBox>

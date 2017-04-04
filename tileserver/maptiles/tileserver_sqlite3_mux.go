@@ -119,10 +119,11 @@ func (self *TileServerSqliteMux) TMSTileMap(w http.ResponseWriter, r *http.Reque
 	start := time.Now()
 	vars := mux.Vars(r)
 	lyr := vars["lyr"]
+	metadata := self.m.MetaDataHandler(lyr)
 	if _, ok := self.lmp.layerChans[lyr]; !ok {
 		http.Error(w, "layer not found", http.StatusNotFound)
 	} else {
-		TMSTileMap(lyr, w, r)
+		TMSTileMap(lyr, metadata["source"], w, r)
 	}
 	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
