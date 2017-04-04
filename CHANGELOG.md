@@ -13,6 +13,7 @@ Change Log
  - gorilla mux used for postgresql and sqlite3 servers
  - Postgres descriptions to table and fields
  - Updated Makefile
+ - tms xml responses
 ### Fixed
  - metadata table support for multiple tile layers
 

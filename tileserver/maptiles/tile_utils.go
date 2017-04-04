@@ -2,6 +2,7 @@ package maptiles
 
 import (
 	"fmt"
+	"math"
 	"regexp"
 	"strconv"
 )
@@ -25,4 +26,9 @@ func GetTileUrlParts(path []string) (string, []uint64) {
 	x, _ := strconv.ParseUint(path[3], 10, 64)
 	y, _ := strconv.ParseUint(path[4], 10, 64)
 	return l, []uint64{x, y, z}
+}
+
+// unitsPerPixel converts zoom_level to units per pixel
+func unitsPerPixel(zoom_level int) float64 {
+	return 0.703125 / math.Pow(2, float64(zoom_level))
 }

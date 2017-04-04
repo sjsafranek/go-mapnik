@@ -30,12 +30,16 @@ func NewTileServerSqliteMux(cacheFile string) *TileServerSqliteMux {
 	t.startTime = time.Now()
 
 	t.Router = mux.NewRouter()
-	t.Router.HandleFunc("/", t.IndexHandler).Methods("GET")
 	t.Router.HandleFunc("/ping", t.PingHandler).Methods("GET")
 	t.Router.HandleFunc("/server", t.ServerProfileHandler).Methods("GET")
-	t.Router.HandleFunc("/{lyr}/metadata", t.MetadataHandler).Methods("GET")
+	//t.Router.HandleFunc("/{lyr}/metadata", t.MetadataHandler).Methods("GET")
 	t.Router.HandleFunc("/tilelayers", t.TileLayersHandler).Methods("GET")
-	t.Router.HandleFunc("/{lyr}/{z:[0-9]+}/{x:[0-9]+}/{y:[0-9]+}.png", t.ServeTileRequest).Methods("GET")
+	t.Router.HandleFunc("/", t.IndexHandler).Methods("GET")
+	t.Router.HandleFunc("/tms/1.0", t.TMSTileMaps).Methods("GET")
+	t.Router.HandleFunc("/tms/1.0/{lyr}", t.TMSTileMap).Methods("GET")
+	t.Router.HandleFunc("/tms/1.0/{lyr}/{z:[0-9]+}", t.TMSErrorTile).Methods("GET")
+	t.Router.HandleFunc("/tms/1.0/{lyr}/{z:[0-9]+}/{x:[0-9]+}", t.TMSErrorTile).Methods("GET")
+	t.Router.HandleFunc("/tms/1.0/{lyr}/{z:[0-9]+}/{x:[0-9]+}/{y:[0-9]+}.png", t.ServeTileRequest).Methods("GET")
 
 	return &t
 }
@@ -93,22 +97,70 @@ func (self *TileServerSqliteMux) ServeTileRequest(w http.ResponseWriter, r *http
 	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
-// RequestErrorHandler handles error response.
-func (self *TileServerSqliteMux) RequestErrorHandler(w http.ResponseWriter, r *http.Request) {
-	start := time.Now()
-	response := make(map[string]interface{})
-	response["status"] = "error"
-	result := make(map[string]interface{})
-	result["message"] = "Expecting /{datasource}/{z}/{x}/{y}.png"
-	response["data"] = result
-	SendJsonResponseFromInterface(w, r, response)
-	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
-}
-
 // IndexHandler for server.
 func (self *TileServerSqliteMux) IndexHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	fmt.Fprintf(w, "MapnikServer\nHello there ladies and gentlemen!")
+	var root = `<?xml version="1.0" encoding="utf-8" ?>
+				 <Services>
+				 	<TileMapService title="GoMapnik Tile Map Service" version="1.0" href="http:127.0.0.1/tms/1.0"/>
+				 </Services>`
+	fmt.Fprintf(w, root)
+	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+}
+
+// TMSTileMaps lists available TileMaps
+func (self *TileServerSqliteMux) TMSTileMaps(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var TileMaps = ``
+	for k := range self.lmp.layerChans {
+		TileMaps += `<TileMap title="` + k + `" srs="EPSG:4326" href="http:127.0.0.1:8080` + r.URL.Path + `/` + k + `"></TileMap>`
+	}
+	var tree = `<?xml version="1.0" encoding="utf-8" ?>
+				 <TileMapService version="1.0" services="http:127.0.0.1:8080` + r.URL.Path + `">
+				 	<Abstract></Abstract>
+					<TileMaps>
+						` + TileMaps + `
+					</TileMaps>
+				 </TileMapService>`
+	fmt.Fprintf(w, tree)
+	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+}
+
+// TMSTileMap shows list of TileSets for layer
+func (self *TileServerSqliteMux) TMSTileMap(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	vars := mux.Vars(r)
+	lyr := vars["lyr"]
+	// metadata := self.m.MetaDataHandler(lyr)
+	var TileSets = ``
+	for i := 0; i < 21; i++ {
+		TileSets += `<TileSet
+						href="` + fmt.Sprintf("http:127.0.0.1:8080%v/%v", r.URL.Path, i) + `"
+						units-per-pixel="` + fmt.Sprintf("%v", unitsPerPixel(i)) + `"
+						order="` + fmt.Sprintf("%v", i) + `">
+					</TileSet>`
+	}
+	var tree = `<?xml version="1.0" encoding="utf-8" ?>
+				 <TileMap version="1.0" services="http:127.0.0.1:8080` + r.URL.Path + `">
+				 	<Title>` + lyr + `</Title>
+					<Abstract></Abstract>
+					<SRS>EPSG:4326</SRS>
+					<BoundingBox minx="-180" miny="-90" maxx="180" max="90"></BoundingBox>
+					<Origin x="-180" y="-90"></Origin>
+					<TileFormat width="256" height="256" mime-type="image/png" extension="png"></TileFormat>
+					<TileSets profile="global-geodetic">
+						` + TileSets + `
+					</TileSets>
+				 </TileMap>`
+	fmt.Fprintf(w, tree)
+	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+}
+
+// TMSErrorTile returns error response
+func (self *TileServerSqliteMux) TMSErrorTile(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	message := "Expecting /{layer}/{z}/{x}/{y}.png"
+	http.Error(w, message, http.StatusBadRequest)
 	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
