@@ -4,6 +4,13 @@ Change Log
 ## [Unreleased]
 
 
+## [0.1.5] - 2017-04-03
+### Added
+ - Global variables
+### Changed
+ - merged duplicated functions for easier testing and debugging
+
+
 
 ## [0.1.4] - 2017-04-03
 ### Added
