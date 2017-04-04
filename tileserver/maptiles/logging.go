@@ -26,8 +26,8 @@ func loadLoggingConfig() {
         </filter>
     </outputs>
     <formats>
-        <format id="common"   format="[MapnikServer] %UTCDate %UTCTime [%LEVEL] %File %FuncShort:%Line %Msg %n" />
-        <format id="stdout"   format="[MapnikServer] %UTCDate %UTCTime [%LEVEL] %File %FuncShort:%Line %Msg %n" />
+        <format id="common"   format="[` + SERVER_NAME + `] %UTCDate %UTCTime [%LEVEL] %File %FuncShort:%Line %Msg %n" />
+        <format id="stdout"   format="[` + SERVER_NAME + `] %UTCDate %UTCTime [%LEVEL] %File %FuncShort:%Line %Msg %n" />
     </formats>
 </seelog>
 `

@@ -2,49 +2,42 @@ package maptiles
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
-// MarshalJsonFromString mashals json from string.
-// func MarshalJsonFromString(w http.ResponseWriter, r *http.Request, data string) ([]byte, error) {
-// 	js, err := json.Marshal(data)
-// 	if err != nil {
-// 		message := fmt.Sprintf(" %v %v [500]", r.Method, r.URL.Path)
-// 		Ligneous.Critical("[HttpServer] ", r.RemoteAddr, message)
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return js, err
-// 	}
-// 	return js, nil
-// }
-
-// MarshalJsonFromInterface marshals interface into json.
-func MarshalJsonFromInterface(w http.ResponseWriter, r *http.Request, data interface{}) ([]byte, error) {
-	js, err := json.Marshal(data)
-	if err != nil {
-		Ligneous.Critical(fmt.Sprintf("[HttpServer] %v %v %v [500]", r.RemoteAddr, r.Method, r.URL.Path))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return js, err
-	}
-	return js, nil
+// SendJsonResponseFromByte Sends http json response from byte.
+func SendJsonResponseFromByte(content []byte, w http.ResponseWriter, r *http.Request) int {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Write(content)
+	return 200
 }
 
-// SendJsonResponse Sends http json response.
-func SendJsonResponse(w http.ResponseWriter, r *http.Request, js []byte) {
-	// Ligneous result
-	Ligneous.Info(fmt.Sprintf("[HttpServer] %v %v %v [200]", r.RemoteAddr, r.Method, r.URL.Path))
-	// set response headers
+// SendJsonResponseFromString Sends http json response from string.
+func SendJsonResponseFromString(content string, w http.ResponseWriter, r *http.Request) int {
 	w.Header().Set("Content-Type", "application/json")
-	// allow cross domain AJAX requests
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	// write response content
-	w.Write(js)
+	w.Write([]byte(content))
+	return 200
 }
 
 // SendJsonResponseFromInterface sends http json response from inteface.
-func SendJsonResponseFromInterface(w http.ResponseWriter, r *http.Request, data interface{}) {
-	js, err := MarshalJsonFromInterface(w, r, data)
-	if nil == err {
-		SendJsonResponse(w, r, js)
+func SendJsonResponseFromInterface(w http.ResponseWriter, r *http.Request, data interface{}) int {
+	js, err := json.Marshal(data)
+	var status int
+	if nil != err {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		status = 500
+	} else {
+		status = SendJsonResponseFromByte(js, w, r)
 	}
+	return status
+}
+
+// SendXMLResponseFromString sends http xml response from string.
+func SendXMLResponseFromString(content string, w http.ResponseWriter, r *http.Request) int {
+	w.Header().Set("Content-Type", "text/xml")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Write([]byte(content))
+	return 200
 }

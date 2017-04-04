@@ -1,7 +1,7 @@
 package maptiles
 
 import (
-	// "fmt"
+	"fmt"
 	"net/http"
 	"runtime"
 	"time"
@@ -9,16 +9,19 @@ import (
 
 // PingHandler provides an api route for server health check
 func PingHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	response := make(map[string]interface{})
 	response["status"] = "ok"
 	result := make(map[string]interface{})
 	result["result"] = "Pong"
 	response["data"] = result
-	SendJsonResponseFromInterface(w, r, response)
+	status := SendJsonResponseFromInterface(w, r, response)
+	Ligneous.Info(fmt.Sprintf("%v %v %v [%v]", r.RemoteAddr, r.URL.Path, time.Since(start), status))
 }
 
 // ServerProfileHandler returns basic server stats.
 func ServerProfileHandler(startTime time.Time, w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	var data map[string]interface{}
 	data = make(map[string]interface{})
 	data["registered"] = startTime.UTC()
@@ -27,5 +30,6 @@ func ServerProfileHandler(startTime time.Time, w http.ResponseWriter, r *http.Re
 	response := make(map[string]interface{})
 	response["status"] = "ok"
 	response["data"] = data
-	SendJsonResponseFromInterface(w, r, response)
+	status := SendJsonResponseFromInterface(w, r, response)
+	Ligneous.Info(fmt.Sprintf("%v %v %v [%v]", r.RemoteAddr, r.URL.Path, time.Since(start), status))
 }

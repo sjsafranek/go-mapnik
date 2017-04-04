@@ -29,15 +29,14 @@ func NewTileServerSqliteMux(cacheFile string) *TileServerSqliteMux {
 	t.startTime = time.Now()
 
 	t.Router = mux.NewRouter()
-	t.Router.HandleFunc("/ping", t.PingHandler).Methods("GET")
+	t.Router.HandleFunc("/ping", PingHandler).Methods("GET")
 	t.Router.HandleFunc("/server", t.ServerProfileHandler).Methods("GET")
-	//t.Router.HandleFunc("/{lyr}/metadata", t.MetadataHandler).Methods("GET")
 	t.Router.HandleFunc("/tilelayers", t.TileLayersHandler).Methods("GET")
-	t.Router.HandleFunc("/", t.IndexHandler).Methods("GET")
+	t.Router.HandleFunc("/", TMSRootHandler).Methods("GET")
 	t.Router.HandleFunc("/tms/1.0", t.TMSTileMaps).Methods("GET")
 	t.Router.HandleFunc("/tms/1.0/{lyr}", t.TMSTileMap).Methods("GET")
-	t.Router.HandleFunc("/tms/1.0/{lyr}/{z:[0-9]+}", t.TMSErrorTile).Methods("GET")
-	t.Router.HandleFunc("/tms/1.0/{lyr}/{z:[0-9]+}/{x:[0-9]+}", t.TMSErrorTile).Methods("GET")
+	t.Router.HandleFunc("/tms/1.0/{lyr}/{z:[0-9]+}", TMSErrorTile).Methods("GET")
+	t.Router.HandleFunc("/tms/1.0/{lyr}/{z:[0-9]+}/{x:[0-9]+}", TMSErrorTile).Methods("GET")
 	t.Router.HandleFunc("/tms/1.0/{lyr}/{z:[0-9]+}/{x:[0-9]+}/{y:[0-9]+}.png", t.ServeTileRequest).Methods("GET")
 
 	return &t
@@ -93,14 +92,7 @@ func (self *TileServerSqliteMux) ServeTileRequest(w http.ResponseWriter, r *http
 		self.m.InsertQueue() <- result // insert newly rendered tile into cache db
 	}
 
-	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
-}
-
-// IndexHandler for server.
-func (self *TileServerSqliteMux) IndexHandler(w http.ResponseWriter, r *http.Request) {
-	start := time.Now()
-	TMSRootHandler(w, r)
-	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+	Ligneous.Info(fmt.Sprintf("%v %v %v [200]", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 // TMSTileMaps lists available TileMaps
@@ -110,8 +102,7 @@ func (self *TileServerSqliteMux) TMSTileMaps(w http.ResponseWriter, r *http.Requ
 	for k := range self.lmp.layerChans {
 		layers = append(layers, k)
 	}
-	TMSTileMaps(layers, w, r)
-	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+	TMSTileMaps(start, layers, w, r)
 }
 
 // TMSTileMap shows list of TileSets for layer
@@ -122,44 +113,15 @@ func (self *TileServerSqliteMux) TMSTileMap(w http.ResponseWriter, r *http.Reque
 	metadata := self.m.MetaDataHandler(lyr)
 	if _, ok := self.lmp.layerChans[lyr]; !ok {
 		http.Error(w, "layer not found", http.StatusNotFound)
+		Ligneous.Info(fmt.Sprintf("%v %v %v [404]", r.RemoteAddr, r.URL.Path, time.Since(start)))
 	} else {
-		TMSTileMap(lyr, metadata["source"], w, r)
+		TMSTileMap(start, lyr, metadata["source"], w, r)
 	}
-	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
-}
-
-// TMSErrorTile returns error response
-func (self *TileServerSqliteMux) TMSErrorTile(w http.ResponseWriter, r *http.Request) {
-	start := time.Now()
-	http.Error(w, "Expecting /{layer}/{z}/{x}/{y}.png", http.StatusBadRequest)
-	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
-}
-
-// MetadataHandler for tile server.
-// func (self *TileServerSqliteMux) MetadataHandler(w http.ResponseWriter, r *http.Request) {
-// 	start := time.Now()
-// 	vars := mux.Vars(r)
-// 	lyr := vars["lyr"]
-// 	metadata := self.m.MetaDataHandler(lyr)
-// 	response := make(map[string]interface{})
-// 	response["status"] = "ok"
-// 	response["data"] = metadata
-// 	SendJsonResponseFromInterface(w, r, response)
-// 	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
-// }
-
-// PingHandler provides an api route for server health check
-func (self *TileServerSqliteMux) PingHandler(w http.ResponseWriter, r *http.Request) {
-	start := time.Now()
-	PingHandler(w, r)
-	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 // ServerProfileHandler returns basic server stats.
 func (self *TileServerSqliteMux) ServerProfileHandler(w http.ResponseWriter, r *http.Request) {
-	start := time.Now()
 	ServerProfileHandler(self.startTime, w, r)
-	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
 // TileLayersHandler returns list of tiles.
@@ -173,6 +135,6 @@ func (self *TileServerSqliteMux) TileLayersHandler(w http.ResponseWriter, r *htt
 	response = make(map[string]interface{})
 	response["status"] = "ok"
 	response["data"] = keys
-	SendJsonResponseFromInterface(w, r, response)
-	Ligneous.Info(fmt.Sprintf("%v %v %v ", r.RemoteAddr, r.URL.Path, time.Since(start)))
+	status := SendJsonResponseFromInterface(w, r, response)
+	Ligneous.Info(fmt.Sprintf("%v %v %v [%v]", r.RemoteAddr, r.URL.Path, time.Since(start), status))
 }

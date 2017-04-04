@@ -3,17 +3,29 @@ package maptiles
 import (
 	"fmt"
 	"net/http"
+	"time"
 )
 
-func TMSRootHandler(w http.ResponseWriter, r *http.Request) {
-	var root = `<?xml version="1.0" encoding="utf-8" ?>
-				 <Services>
-				 	<TileMapService title="GoMapnik Tile Map Service" version="1.0" href="http:127.0.0.1/tms/1.0"/>
-				 </Services>`
-	fmt.Fprintf(w, root)
+// TMSErrorTile returns error response
+func TMSErrorTile(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	http.Error(w, "Expecting /{layer}/{z}/{x}/{y}.png", http.StatusBadRequest)
+	Ligneous.Info(fmt.Sprintf("%v %v %v [400]", r.RemoteAddr, r.URL.Path, time.Since(start)))
 }
 
-func TMSTileMaps(lyrs []string, w http.ResponseWriter, r *http.Request) {
+// TMSRootHandler root handler for tms server.
+func TMSRootHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	var tree = `<?xml version="1.0" encoding="utf-8" ?>
+				 <Services>
+				 	<TileMapService title="` + SERVER_NAME + ` Tile Map Service" version="1.0" href="http:127.0.0.1/tms/1.0"/>
+				 </Services>`
+	status := SendXMLResponseFromString(tree, w, r)
+	Ligneous.Info(fmt.Sprintf("%v %v %v [%v]", r.RemoteAddr, r.URL.Path, time.Since(start), status))
+}
+
+// TMSTileMaps returns list of available TileMaps.
+func TMSTileMaps(start time.Time, lyrs []string, w http.ResponseWriter, r *http.Request) {
 	var TileMaps = ``
 	for _, lyr := range lyrs {
 		TileMaps += `<TileMap title="` + lyr + `" srs="EPSG:4326" href="http:127.0.0.1:8080` + r.URL.Path + `/` + lyr + `"></TileMap>`
@@ -25,10 +37,12 @@ func TMSTileMaps(lyrs []string, w http.ResponseWriter, r *http.Request) {
 						` + TileMaps + `
 					</TileMaps>
 				 </TileMapService>`
-	fmt.Fprintf(w, tree)
+	status := SendXMLResponseFromString(tree, w, r)
+	Ligneous.Info(fmt.Sprintf("%v %v %v [%v]", r.RemoteAddr, r.URL.Path, time.Since(start), status))
 }
 
-func TMSTileMap(lyr string, source string, w http.ResponseWriter, r *http.Request) {
+// TMSTileMap returns list of TileSets for layer.
+func TMSTileMap(start time.Time, lyr string, source string, w http.ResponseWriter, r *http.Request) {
 	var TileSets = ``
 	for i := 0; i < 21; i++ {
 		TileSets += `<TileSet
@@ -50,5 +64,6 @@ func TMSTileMap(lyr string, source string, w http.ResponseWriter, r *http.Reques
 						` + TileSets + `
 					</TileSets>
 				 </TileMap>`
-	fmt.Fprintf(w, tree)
+	status := SendXMLResponseFromString(tree, w, r)
+	Ligneous.Info(fmt.Sprintf("%v %v %v [%v]", r.RemoteAddr, r.URL.Path, time.Since(start), status))
 }
