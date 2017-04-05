@@ -15,6 +15,7 @@ import (
     "image/color"
 )
 
+// http://stackoverflow.com/questions/35964656/golang-how-to-concatenate-append-images-to-one-another
 
 // Create a struct to deal with pixel
 type Pixel struct {
