@@ -32,6 +32,11 @@ func init() {
 	}
 }
 
+// degTorad converts degree to radians.
+func degTorad(deg float64) float64 {
+	return deg * math.Pi / 180
+}
+
 // fromLLtoPixel converts LatLng to pixel coordinate.
 func fromLLtoPixel(ll [2]float64, zoom uint64) [2]float64 {
 	d := gp.zc[zoom]
