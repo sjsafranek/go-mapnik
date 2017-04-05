@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"math"
 	"time"
+	"sort"
 	"io/ioutil"
 	"net/http"
 
@@ -138,7 +139,7 @@ func BytesToPngImage(b []byte) image.Image {
 }
 
 func mergePngTiles() {
-	// Get bounds for new image
+	// Get bounds for new image.
 	size := 256
 	cols := 0
 	rows := 0
@@ -147,33 +148,39 @@ func mergePngTiles() {
 		rows = len(tiles_map[i]) * size
 	}
 
-	// collect pixel data from each image.
-	// each image has a x-offset and Y-offset from the first.
+	// Sort columns.
+	var columns []int
+	for i := range tiles_map {
+		columns = append(columns, i)
+	}
+	sort.Ints(columns)
+
+	// Collect pixel data from each image.
+	// Each image has a x-offset and Y-offset from the first.
 	var pixelSum []*Pixel
 	x := 0
-	for i := range tiles_map {
+	for _, i := range columns {
 		y := 0
 		for j := range tiles_map[i] {
 			pixels := DecodePixelsFromImage(tiles_map[i][j], x, y)
 			pixelSum = append(pixelSum, pixels...)
 			y += size
-			fmt.Println(x,y)
 		}
 		x += size
 	}
 
 	// Set a new size for the new image equal to the max width
-	// of bigger image and max height of two images combined
+	// of bigger image and max height of two images combined.
 	newRect := image.Rectangle{
 		Min: image.Point{X: 0, Y: 0},
 		Max: image.Point{X: cols, Y: rows},
 	}
 
-	// Create new image
+	// Create new image for final output.
 	finImage := image.NewRGBA(newRect)
 
 	// This is the cool part, all you have to do is loop through
-	// each Pixel and set the image's color on the go
+	// each Pixel and set the image's color on the go.
 	for _, px := range pixelSum {
 			finImage.Set(
 				px.Point.X,
@@ -183,7 +190,7 @@ func mergePngTiles() {
 	}
 	draw.Draw(finImage, finImage.Bounds(), finImage, image.Point{0, 0}, draw.Src)
 
-	// Create a new file and write to it
+	// Create a new file and write to it.
 	out, err := os.Create("./output.png")
 	if err != nil {
 		panic(err)
