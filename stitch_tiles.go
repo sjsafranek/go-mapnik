@@ -79,10 +79,7 @@ type xyz struct {
 // getTileNames
 func getTileNames(minlat, maxlat, minlng, maxlng float64, z int) []xyz {
 	tiles := []xyz{}
-	// // upper right
-	// ur_tile_x, ur_tile_y := deg2num(float64(70), float64(16), z)
-	// // lower left
-	// ll_tile_x, ll_tile_y := deg2num(float64(35), float64(0), z)
+
 	// upper right
 	ur_tile_x, ur_tile_y := deg2num(maxlat, maxlng, z)
 	// lower left
@@ -172,7 +169,9 @@ func mergePngTiles() {
 		Max: image.Point{X: cols, Y: rows},
 	}
 
+	// Create new image
 	finImage := image.NewRGBA(newRect)
+
 	// This is the cool part, all you have to do is loop through
 	// each Pixel and set the image's color on the go
 	for _, px := range pixelSum {
