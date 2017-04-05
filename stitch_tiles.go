@@ -138,7 +138,7 @@ func BytesToPngImage(b []byte) image.Image {
 	return img
 }
 
-func mergePngTiles() {
+func mergePngTiles() image.Image {
 	// Get bounds for new image.
 	size := 256
 	cols := 0
@@ -190,28 +190,33 @@ func mergePngTiles() {
 	}
 	draw.Draw(finImage, finImage.Bounds(), finImage, image.Point{0, 0}, draw.Src)
 
+	return finImage
+}
+
+func savePng(filename string, img image.Image) {
 	// Create a new file and write to it.
-	out, err := os.Create("./output.png")
+	out, err := os.Create(filename)
 	if err != nil {
 		panic(err)
 		os.Exit(1)
 	}
-	err = png.Encode(out, finImage)
+	err = png.Encode(out, img)
 	if err != nil {
 		panic(err)
 		os.Exit(1)
 	}
 }
 
+
 func main() {
-	base_url := "http://localhost:8080/tms/1.0/population"
-	// base_url := "http://localhost:8080/tms/1.0/osm"
+	// base_url := "http://localhost:8080/tms/1.0/population"
+	base_url := "http://localhost:8080/tms/1.0/osm"
 
 	minlat := float64(35)
 	maxlat := float64(70)
 	minlng := float64(0)
 	maxlng := float64(16)
-	zoom := 7
+	zoom := 8
 
 	tiles := getTileNames(minlat, maxlat, minlng, maxlng, zoom)
 
@@ -224,7 +229,8 @@ func main() {
 
 	}
 
-	mergePngTiles()
+	finalImage := mergePngTiles()
+	savePng("./osm.png", finalImage)
 }
 
 
