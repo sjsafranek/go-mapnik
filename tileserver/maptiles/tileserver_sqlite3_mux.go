@@ -115,12 +115,17 @@ func (self *TileServerSqliteMux) NewTileLayer(w http.ResponseWriter, r *http.Req
 	api_request := new(ApiRequest)
 	err = json.Unmarshal(body, &api_request)
 	if nil != err {
-		Ligneous.Critical(fmt.Sprintf("%v %v %v [400]", r.RemoteAddr, r.URL.Path, time.Since(start)))
+		Ligneous.Error(fmt.Sprintf("%v %v %v [400]", r.RemoteAddr, r.URL.Path, time.Since(start)))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	self.AddMapnikLayer(api_request.Data.TileLayerName, api_request.Data.TileLayerSource)
+	err = self.AddMapnikLayer(api_request.Data.TileLayerName, api_request.Data.TileLayerSource)
+	if nil != err {
+		Ligneous.Error(fmt.Sprintf("%v %v %v [409]", r.RemoteAddr, r.URL.Path, time.Since(start)))
+		http.Error(w, err.Error(), http.StatusConflict)
+		return
+	}
 
 	Ligneous.Info(fmt.Sprintf("%v", api_request))
 	Ligneous.Info(fmt.Sprintf("%v %v %v [200]", r.RemoteAddr, r.URL.Path, time.Since(start)))
