@@ -27,7 +27,15 @@ func NewTileServerPostgresMux(cacheFile string) *TileServerPostgresMux {
 	t.lmp = NewLayerMultiplex()
 	t.m = NewTileDbPostgresql(cacheFile)
 
-	Ligneous.Info(t.m.GetTileLayers())
+	tilelayers, err := t.m.GetTileLayers()
+	if nil != err {
+		Ligneous.Critical(err)
+		panic(err)
+	}
+	Ligneous.Debug(tilelayers)
+	for i := range tilelayers {
+		t.AddMapnikLayer(tilelayers[i]["name"], tilelayers[i]["source"])
+	}
 
 	t.startTime = time.Now()
 
@@ -48,6 +56,17 @@ func NewTileServerPostgresMux(cacheFile string) *TileServerPostgresMux {
 
 // AddMapnikLayer adds mapnik layer to server.
 func (self *TileServerPostgresMux) AddMapnikLayer(layerName string, stylesheet string) {
+	Ligneous.Info("Adding tilelayer: ", layerName, " ", stylesheet)
+
+	// check if same layerName exists
+	for k := range self.lmp.layerChans {
+		if k == layerName {
+			Ligneous.Error("Tile layer already exists: ", k)
+			return
+		}
+	}
+
+	// add tile layer
 	self.m.AddLayerMetadata(layerName, stylesheet)
 	self.lmp.AddRenderer(layerName, stylesheet)
 }
@@ -114,7 +133,12 @@ func (self *TileServerPostgresMux) TMSTileMap(w http.ResponseWriter, r *http.Req
 	start := time.Now()
 	vars := mux.Vars(r)
 	lyr := vars["lyr"]
-	metadata := self.m.MetaDataHandler(lyr)
+	metadata, err := self.m.MetaDataHandler(lyr)
+	if nil != err {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		Ligneous.Info(fmt.Sprintf("%v %v %v [500]", r.RemoteAddr, r.URL.Path, time.Since(start)))
+		return
+	}
 	if _, ok := self.lmp.layerChans[lyr]; !ok {
 		http.Error(w, "layer not found", http.StatusNotFound)
 		Ligneous.Info(fmt.Sprintf("%v %v %v [404]", r.RemoteAddr, r.URL.Path, time.Since(start)))

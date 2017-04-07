@@ -20,7 +20,6 @@ func NewTileLayer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// api_request := &ApiRequest
 	api_request := new(ApiRequest)
 	err = json.Unmarshal(body, &api_request)
 	if nil != err {

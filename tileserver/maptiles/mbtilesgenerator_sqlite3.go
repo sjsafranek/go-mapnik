@@ -217,19 +217,20 @@ func (self *TileDbSqlite3) rowExists(query string) bool {
 }
 
 // MetaDataHandler gets metadata from database.
-func (self *TileDbSqlite3) MetaDataHandler(lyr string) map[string]string {
+func (self *TileDbSqlite3) MetaDataHandler(lyr string) (map[string]string, error) {
+	metadata := make(map[string]string)
 	rows, err := self.db.Query("SELECT name, value FROM metadata WHERE layer_name=?", lyr)
 	if nil != err {
 		Ligneous.Error(err)
+		return metadata, err
 	}
-	metadata := make(map[string]string)
 	for rows.Next() {
 		var name string
 		var value string
 		rows.Scan(&name, &value)
 		metadata[name] = value
 	}
-	return metadata
+	return metadata, nil
 }
 
 // GetTileLayers get metadata for all tilelayers.
@@ -243,7 +244,12 @@ func (self *TileDbSqlite3) GetTileLayers() (map[string]map[string]string, error)
 	for rows.Next() {
 		var layer_name string
 		rows.Scan(&layer_name)
-		layers[layer_name] = self.MetaDataHandler(layer_name)
+		metadata, err := self.MetaDataHandler(layer_name)
+		if nil != err {
+			Ligneous.Error(err)
+			return layers, err
+		}
+		layers[layer_name] = metadata
 	}
 	return layers, nil
 }
