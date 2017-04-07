@@ -1,7 +1,9 @@
 package maptiles
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
@@ -40,10 +42,11 @@ func NewTileServerSqliteMux(cacheFile string) *TileServerSqliteMux {
 	t.startTime = time.Now()
 
 	t.Router = mux.NewRouter()
-	t.Router.HandleFunc("/api/v1/tilelayer", NewTileLayer).Methods("POST")
+	t.Router.HandleFunc("/api/v1/tilelayer/{lyr}", t.GetTileLayer).Methods("Get")
+	t.Router.HandleFunc("/api/v1/tilelayer", t.NewTileLayer).Methods("POST")
+	t.Router.HandleFunc("/api/v1/tilelayers", t.TileLayersHandler).Methods("GET")
 	t.Router.HandleFunc("/ping", PingHandler).Methods("GET")
 	t.Router.HandleFunc("/server", t.ServerProfileHandler).Methods("GET")
-	t.Router.HandleFunc("/tilelayers", t.TileLayersHandler).Methods("GET")
 	t.Router.HandleFunc("/", TMSRootHandler).Methods("GET")
 	t.Router.HandleFunc("/tms/1.0", t.TMSTileMaps).Methods("GET")
 	t.Router.HandleFunc("/tms/1.0/{lyr}", t.TMSTileMap).Methods("GET")
@@ -55,20 +58,74 @@ func NewTileServerSqliteMux(cacheFile string) *TileServerSqliteMux {
 }
 
 // AddMapnikLayer adds mapnik layer to server.
-func (self *TileServerSqliteMux) AddMapnikLayer(layerName string, stylesheet string) {
+func (self *TileServerSqliteMux) AddMapnikLayer(layerName string, stylesheet string) error {
 	Ligneous.Info("Adding tilelayer: ", layerName, " ", stylesheet)
 
 	// check if same layerName exists
 	for k := range self.lmp.layerChans {
 		if k == layerName {
 			Ligneous.Error("Tile layer already exists: ", k)
-			return
+			return fmt.Errorf("Tile layer already exists: %v", k)
 		}
+	}
+
+	// Validate source
+	if !isValidTileSource(stylesheet) {
+		Ligneous.Error("Tile layer source is not valid: ", stylesheet)
+		return fmt.Errorf("Tile layer source is not valid: %v", stylesheet)
 	}
 
 	// add tile layer
 	self.m.AddLayerMetadata(layerName, stylesheet)
 	self.lmp.AddRenderer(layerName, stylesheet)
+	return nil
+}
+
+// GetTileLayer gets metadata for tilelayer.
+func (self *TileServerSqliteMux) GetTileLayer(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	vars := mux.Vars(r)
+	lyr := vars["lyr"]
+	metadata, err := self.m.MetaDataHandler(lyr)
+	if nil != err {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		Ligneous.Critical(fmt.Sprintf("%v %v %v [500]", r.RemoteAddr, r.URL.Path, time.Since(start)))
+		return
+	}
+	if _, ok := self.lmp.layerChans[lyr]; !ok {
+		http.Error(w, "layer not found", http.StatusNotFound)
+		Ligneous.Error(fmt.Sprintf("%v %v %v [404]", r.RemoteAddr, r.URL.Path, time.Since(start)))
+		return
+	}
+	SendJsonResponseFromInterface(w, r, metadata)
+}
+
+// NewTileLayer creates new tile layer.
+func (self *TileServerSqliteMux) NewTileLayer(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+
+	body, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if nil != err {
+		Ligneous.Critical(fmt.Sprintf("%v %v %v [500]", r.RemoteAddr, r.URL.Path, time.Since(start)))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	api_request := new(ApiRequest)
+	err = json.Unmarshal(body, &api_request)
+	if nil != err {
+		Ligneous.Critical(fmt.Sprintf("%v %v %v [400]", r.RemoteAddr, r.URL.Path, time.Since(start)))
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	self.AddMapnikLayer(api_request.Data.TileLayerName, api_request.Data.TileLayerSource)
+
+	Ligneous.Info(fmt.Sprintf("%v", api_request))
+	Ligneous.Info(fmt.Sprintf("%v %v %v [200]", r.RemoteAddr, r.URL.Path, time.Since(start)))
+
+	SendJsonResponseFromString(`{"status": "ok"}`, w, r)
 }
 
 // ServeTileRequest serves tile request.

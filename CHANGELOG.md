@@ -5,6 +5,8 @@ Change Log
 
 
 ## [0.1.6] - 2017-04-07
+### Added
+ - restapi route for adding and getting tilelayers
 ### Changed
  - Read tilelayers from database
 

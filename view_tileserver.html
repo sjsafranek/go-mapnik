@@ -47,7 +47,7 @@
 			}).setView([0,0], 2);
 
 			// Get available tile layers from api request.
-			$.getJSON( server + '/tilelayers', {}, function(result) {
+			$.getJSON( server + '/api/v1/tilelayers', {}, function(result) {
 
 				// Check for successful response.
 				if ('ok' === result.status) {

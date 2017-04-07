@@ -5,6 +5,7 @@ import (
 	"math"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 // ParseTileUrl validates tile url and returns layer, x, y and z parameters
@@ -31,4 +32,14 @@ func GetTileUrlParts(path []string) (string, []uint64) {
 // unitsPerPixel converts zoom_level to units per pixel
 func unitsPerPixel(zoom_level int) float64 {
 	return 0.703125 / math.Pow(2, float64(zoom_level))
+}
+
+func isValidTileSource(source string) bool {
+	source = strings.ToLower(source)
+	if strings.Contains(source, "{x}") || strings.Contains(source, "{y}") || strings.Contains(source, "{z}") {
+		return true
+	} else if strings.Contains(source, ".xml") {
+		return true
+	}
+	return false
 }
