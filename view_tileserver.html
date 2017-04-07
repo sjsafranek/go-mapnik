@@ -76,5 +76,26 @@
 
 		$(document).ready(initialize);
 
+
+		function newTileLayer() {
+
+			$.ajax({
+				type: "POST",
+				url: server+"/api/v1/tilelayer",
+				data: JSON.stringify({
+					"method": "new_tile_layer",
+					"data": {
+						"source": "https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+					}
+				}),
+				success: function(result) {
+					console.log(result);
+				},
+				dataType: "json"
+			});
+
+		}
+
+
 	</script>
 </html>

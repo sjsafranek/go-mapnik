@@ -231,3 +231,19 @@ func (self *TileDbSqlite3) MetaDataHandler(lyr string) map[string]string {
 	}
 	return metadata
 }
+
+// GetTileLayers get metadata for all tilelayers.
+func (self *TileDbSqlite3) GetTileLayers() (map[string]map[string]string, error) {
+	layers := make(map[string]map[string]string)
+	rows, err := self.db.Query("SELECT layer_name FROM layers")
+	if nil != err {
+		Ligneous.Error(err)
+		return layers, err
+	}
+	for rows.Next() {
+		var layer_name string
+		rows.Scan(&layer_name)
+		layers[layer_name] = self.MetaDataHandler(layer_name)
+	}
+	return layers, nil
+}

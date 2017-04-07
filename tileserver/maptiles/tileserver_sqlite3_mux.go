@@ -26,9 +26,13 @@ func NewTileServerSqliteMux(cacheFile string) *TileServerSqliteMux {
 	t := TileServerSqliteMux{}
 	t.lmp = NewLayerMultiplex()
 	t.m = NewTileDbSqlite(cacheFile)
+
+	Ligneous.Info(t.m.GetTileLayers())
+
 	t.startTime = time.Now()
 
 	t.Router = mux.NewRouter()
+	t.Router.HandleFunc("/api/v1/tilelayer", NewTileLayer).Methods("POST")
 	t.Router.HandleFunc("/ping", PingHandler).Methods("GET")
 	t.Router.HandleFunc("/server", t.ServerProfileHandler).Methods("GET")
 	t.Router.HandleFunc("/tilelayers", t.TileLayersHandler).Methods("GET")
