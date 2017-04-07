@@ -52,6 +52,7 @@ func NewTileServerSqliteMux(cacheFile string) *TileServerSqliteMux {
 	t.Router.HandleFunc("/tms/1.0/{lyr}", t.TMSTileMap).Methods("GET")
 	t.Router.HandleFunc("/tms/1.0/{lyr}/{z:[0-9]+}", TMSErrorTile).Methods("GET")
 	t.Router.HandleFunc("/tms/1.0/{lyr}/{z:[0-9]+}/{x:[0-9]+}", TMSErrorTile).Methods("GET")
+	t.Router.HandleFunc("/tms/1.0/{lyr}/{z:[0-9]+}/{x:[0-9]+}/{y:[0-9]+}", t.ServeTileRequest).Methods("GET")
 	t.Router.HandleFunc("/tms/1.0/{lyr}/{z:[0-9]+}/{x:[0-9]+}/{y:[0-9]+}.png", t.ServeTileRequest).Methods("GET")
 
 	return &t

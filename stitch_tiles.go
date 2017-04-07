@@ -14,9 +14,22 @@ import (
 	"image/draw"
 	"image/png"
 	"os"
+
+	"flag"
 )
 
 // http://stackoverflow.com/questions/35964656/golang-how-to-concatenate-append-images-to-one-another
+
+var (
+	TILELAYER_URL string
+	SAVEFILE string
+	MIN_LAT float64
+	MAX_LAT float64
+	MIN_LNG float64
+	MAX_LNG float64
+	ZOOM int
+	COOK bool
+)
 
 // Create a struct to deal with pixel
 type Pixel struct {
@@ -70,8 +83,8 @@ type xyz struct {
 	z int
 }
 
-// getTileNames
-func getTileNames(minlat, maxlat, minlng, maxlng float64, z int) []xyz {
+// GetTileNames
+func GetTileNames(minlat, maxlat, minlng, maxlng float64, z int) []xyz {
 	tiles := []xyz{}
 
 	// upper right
@@ -93,8 +106,8 @@ func getTileNames(minlat, maxlat, minlng, maxlng float64, z int) []xyz {
 	return tiles
 }
 
-// getTilePngFromUrl
-func getTilePngBytesFromUrl(tile_url string) []byte {
+// GetTilePngBytesFromUrl requests map tile png from url.
+func GetTilePngBytesFromUrl(tile_url string) []byte {
 	fmt.Println("GET", tile_url)
 
 	// Just a simple GET request to the image URL
@@ -126,7 +139,7 @@ func getTilePngBytesFromUrl(tile_url string) []byte {
 	return data
 }
 
-// BytesToPngImage
+// BytesToPngImage converts bytes to png image struct.
 func BytesToPngImage(b []byte) image.Image {
 	img, err := png.Decode(bytes.NewReader(b))
 	if nil != err {
@@ -135,7 +148,8 @@ func BytesToPngImage(b []byte) image.Image {
 	return img
 }
 
-func mergePngTiles() image.Image {
+// MergePngTiles combines png tiles into one image.
+func MergePngTiles() image.Image {
 	// Get bounds for new image.
 	size := 256
 	cols := 0
@@ -205,28 +219,37 @@ func savePng(filename string, img image.Image) {
 }
 
 func main() {
-	// base_url := "http://localhost:8080/tms/1.0/population"
-	base_url := "http://localhost:8080/tms/1.0/osm"
 
-	minlat := float64(35)
-	maxlat := float64(70)
-	minlng := float64(0)
-	maxlng := float64(16)
-	zoom := 6
+	flag.StringVar(&TILELAYER_URL, "u", "http://localhost:8080/tms/1.0/population", "tile layer url")
+	flag.StringVar(&SAVEFILE, "o", "output.png", "save png file")
+	flag.Float64Var(&MIN_LAT, "minlat", -85, "min latitude")
+	flag.Float64Var(&MAX_LAT, "maxlat", 85, "max latitude")
+	flag.Float64Var(&MIN_LNG, "minlng", -175, "min longitude")
+	flag.Float64Var(&MAX_LNG, "maxlng", 175, "max longitude")
+	flag.IntVar(&ZOOM, "z", 3, "zoom")
+	flag.BoolVar(&COOK, "c", false, "cook map tiles")
+	flag.Parse()
 
-	tiles := getTileNames(minlat, maxlat, minlng, maxlng, zoom)
+	tiles := GetTileNames(MIN_LAT, MAX_LAT, MIN_LNG, MAX_LNG, ZOOM)
+
+	cooked_tiles := 0
 
 	for _, v := range tiles {
 		tile_url := fmt.Sprintf("/%v/%v/%v.png", v.z, v.x, v.y)
-		data := getTilePngBytesFromUrl(base_url + tile_url)
-
-		img := BytesToPngImage(data)
-		tiles_map[v.x] = append(tiles_map[v.x], img)
-
+		data := GetTilePngBytesFromUrl(TILELAYER_URL + tile_url)
+		if !COOK {
+			img := BytesToPngImage(data)
+			tiles_map[v.x] = append(tiles_map[v.x], img)
+		}
+		cooked_tiles++
 	}
 
-	finalImage := mergePngTiles()
-	savePng("./osm.png", finalImage)
+	if !COOK {
+		finalImage := MergePngTiles()
+		savePng("./"+SAVEFILE, finalImage)
+	}
+
+	fmt.Println("Cooked tiles: ", cooked_tiles)
 }
 
 /*
