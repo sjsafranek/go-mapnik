@@ -91,7 +91,10 @@ func NewTileRenderer(stylesheet string) *TileRenderer {
 	if strings.Contains(stylesheet, ".xml") {
 		t.proxy = false
 		t.s = stylesheet
-	} else if strings.Contains(stylesheet, "http") && strings.Contains(stylesheet, "{z}/{x}/{y}.png") {
+	} else if strings.Contains(stylesheet, "http") && strings.Contains(stylesheet, "{z}/{x}/{y}") {
+		t.proxy = true
+		t.s = stylesheet
+	} else if strings.Contains(stylesheet, "http") && strings.Contains(stylesheet, "{z}/{y}/{x}") {
 		t.proxy = true
 		t.s = stylesheet
 	}
