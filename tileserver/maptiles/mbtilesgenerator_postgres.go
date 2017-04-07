@@ -91,7 +91,9 @@ func (self *TileDbPostgresql) readLayers() {
 
 // ensureLayer checks if tile layer is in lookup table.
 func (self *TileDbPostgresql) ensureLayer(layer string) {
+	Ligneous.Info("ensureLayer")
 	if _, ok := self.layerIds[layer]; !ok {
+		Ligneous.Info("ensureLayer in map")
 		queryString := "INSERT INTO layers(layer_name) VALUES($1)"
 		if _, err := self.db.Exec(queryString, layer); err != nil {
 			Ligneous.Debug(err)
@@ -220,6 +222,7 @@ func (self *TileDbPostgresql) AddLayerMetadata(lyr string, stylesheet string) {
 				Ligneous.Debug(query, "\n")
 			}
 		}
+		self.ensureLayer(lyr)
 	}
 
 }

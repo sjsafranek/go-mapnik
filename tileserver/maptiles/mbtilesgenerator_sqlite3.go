@@ -202,6 +202,7 @@ func (self *TileDbSqlite3) AddLayerMetadata(lyr string, stylesheet string) {
 				Ligneous.Debug(query, "\n")
 			}
 		}
+		self.ensureLayer(lyr)
 	}
 
 }
